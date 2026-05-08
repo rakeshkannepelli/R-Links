@@ -21,6 +21,7 @@ export default function Profile() {
   const user = useAppStore(state => state.user) || { username: 'Alex_Protocol', level: computedLevel, role: 'Senior Link Architect' };
   const links = useAppStore(state => state.links);
   const updateUser = useAppStore(state => state.updateUser);
+  const dispatchBotEvent = useAppStore(state => state.dispatchBotEvent);
 
   const categoryCounts = useMemo(() => {
     const counts = links.reduce((acc, link) => {
@@ -36,6 +37,7 @@ export default function Profile() {
       <form onSubmit={(e) => {
         e.preventDefault();
         updateUser({ username: e.target.username.value, role: e.target.role.value });
+        dispatchBotEvent('PROFILE_UPDATE');
         toast.dismiss(t.id);
         toast.success('Details Updated');
       }} className="flex flex-col gap-3 p-2 bg-surface text-primary border-2 border-primary">
@@ -62,6 +64,7 @@ export default function Profile() {
         const reader = new FileReader();
         reader.onloadend = () => {
             updateUser({ photoUrl: reader.result });
+            dispatchBotEvent('PROFILE_UPDATE');
             toast.success('Local Photo Updated');
         };
         reader.readAsDataURL(file);

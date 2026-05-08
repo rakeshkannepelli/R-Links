@@ -19,21 +19,26 @@ const useAppStore = create(
     (set, get) => ({
       user: null, // { operatorId: string, level: number, xp: number }
       links: initialLinks, // Array of { id, url, title, category, tags: [], date, pinned: boolean }
+      lastAction: null, // { type: 'ADD' | 'UPDATE' | 'DELETE', timestamp: number }
       
-      login: (operatorId, passphrase) => set({ user: { operatorId, level: 42, xp: 82.3 } }),
+      login: (userData) => set({ user: userData }),
       logout: () => set({ user: null }),
       updateUser: (updates) => set((state) => ({ user: { ...state.user, ...updates } })),
+      dispatchBotEvent: (type) => set({ lastAction: { type, timestamp: Date.now() } }),
       
       addLink: (link) => set((state) => ({ 
-        links: [{...link, id: Date.now().toString(), date: new Date().toISOString(), pinned: false}, ...state.links]
+        links: [{...link, id: Date.now().toString(), date: new Date().toISOString(), pinned: false}, ...state.links],
+        lastAction: { type: 'ADD', timestamp: Date.now() }
       })),
       
       deleteLink: (id) => set((state) => ({
-        links: state.links.filter(l => l.id !== id)
+        links: state.links.filter(l => l.id !== id),
+        lastAction: { type: 'DELETE', timestamp: Date.now() }
       })),
 
       updateLink: (id, updatedData) => set((state) => ({
-        links: state.links.map(l => l.id === id ? { ...l, ...updatedData } : l)
+        links: state.links.map(l => l.id === id ? { ...l, ...updatedData } : l),
+        lastAction: { type: 'UPDATE', timestamp: Date.now() }
       })),
 
       togglePin: (id) => set((state) => ({

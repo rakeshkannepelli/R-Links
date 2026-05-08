@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import useAppStore from '../store';
+import BookAgent from './BookAgent';
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ export default function Layout() {
   return (
     <div className="font-body text-on-surface bg-surface min-h-screen pb-24 pt-20 dotted-grid overflow-x-hidden flex flex-col w-full max-w-[100vw]">
       <div className="grain-texture"></div>
+      {/* AI Observer Book Agent — fixed bottom-left, above mobile nav */}
+      <BookAgent />
 
       {/* TopAppBar */}
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#fbf9f0] border-b-2 border-dashed border-[#5f5e5e]/20 max-w-[100vw]">

@@ -5,6 +5,7 @@ import { Peer } from 'peerjs';
 
 export default function Share() {
   const links = useAppStore(state => state.links);
+  const dispatchBotEvent = useAppStore(state => state.dispatchBotEvent);
   const [outputFormat, setOutputFormat] = useState('README');
 
   // P2P State
@@ -50,6 +51,7 @@ export default function Share() {
   const startReceiving = () => {
     setActiveMode('RECEIVE');
     setStatus('GENERATING KEY...');
+    dispatchBotEvent('P2P_START');
     
     if (peerInstance.current) peerInstance.current.destroy();
     
@@ -91,6 +93,7 @@ export default function Share() {
     if (!targetIdValue) { toast.error("Receiver Node required"); return; }
     setActiveMode('SEND');
     setStatus('LOCATING NODE...');
+    dispatchBotEvent('P2P_START');
     
     if (peerInstance.current) peerInstance.current.destroy();
     
@@ -159,43 +162,57 @@ export default function Share() {
     setConnected(false);
     setActiveMode(null);
     setStatus('OFFLINE');
+    dispatchBotEvent('P2P_END');
   };
 
   const handleExecute = () => {
     if (links.length === 0) {
-        toast.error('No records to export');
-        return;
+      toast.error('No records to export');
+      return;
     }
-    
+    dispatchBotEvent('EXPORT');
+
+    // Cross-browser helper: create, click, and remove anchor
+    const triggerDownload = (blob, filename) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    };
+
     if (outputFormat === 'CSV') {
-        let csv = 'ID,Title,URL,Category,Date\n';
-        links.forEach(l => {
-          csv += `${l.id},"${l.title}","${l.url}",${l.category},${l.date}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'rlinks_export.csv';
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success(`Exported ${links.length} records to CSV`);
+      let csv = 'ID,Title,URL,Category,Date\n';
+      links.forEach(l => {
+        // Escape quotes inside fields
+        const title = (l.title || '').replace(/"/g, '""');
+        const url   = (l.url   || '').replace(/"/g, '""');
+        csv += `${l.id},"${title}","${url}",${l.category},${l.date}\n`;
+      });
+      triggerDownload(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'rlinks_export.csv');
+      toast.success(`Exported ${links.length} records to CSV`);
+
     } else if (outputFormat === 'README') {
-        let md = '# RLinks Database Export\n\n';
-        links.forEach(l => {
-          md += `### ${l.title}\n- **URL**: [${l.url}](${l.url})\n- **Category**: ${l.category}\n- **Date**: ${new Date(l.date).toLocaleDateString()}\n\n`;
-        });
-        const blob = new Blob([md], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'README.md';
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success(`Exported ${links.length} records to README`);
+      let md = '# RLinks Database Export\n\n';
+      links.forEach(l => {
+        md += `### ${l.title}\n- **URL**: [${l.url}](${l.url})\n- **Category**: ${l.category}\n- **Date**: ${new Date(l.date).toLocaleDateString()}\n\n`;
+      });
+      triggerDownload(new Blob([md], { type: 'text/markdown;charset=utf-8;' }), 'README.md');
+      toast.success(`Exported ${links.length} records to README`);
+
     } else if (outputFormat === 'PDF') {
-        toast.success('Initializing PDF print sequence');
-        setTimeout(() => window.print(), 500);
+      toast.success('Opening print dialog…');
+      // Small delay lets the toast render before print dialog freezes the UI
+      setTimeout(() => {
+        try {
+          window.print();
+        } catch {
+          toast.error('Print not supported on this device');
+        }
+      }, 600);
     }
   };
 
