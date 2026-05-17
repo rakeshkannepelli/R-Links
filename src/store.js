@@ -1,49 +1,126 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const initialLinks = [
-  { id: '1', title: 'Building with Tailwind v4: The New Era of JIT', url: 'https://github.com/blog', category: 'DEV', description: 'Exploring the upcoming features of the next major Tailwind CSS release and how i...', date: new Date().toISOString(), pinned: false, tags: ['dev', 'css'] },
-  { id: '2', title: 'Memory Management in LLM Agents', url: 'https://openai.com/research', category: 'AI CHATBOT', description: 'A technical deep dive into how modern AI agents persist context across sessions...', date: new Date().toISOString(), pinned: false, tags: ['ai', 'research'] },
-  { id: '3', title: 'Low-Latency Video Over WebRTC', url: 'https://twitch.tv/engineering', category: 'STREAM', description: 'How real-time streaming platforms are reducing broadcast lag to sub-second...', date: new Date().toISOString(), pinned: false, tags: ['stream', 'webrtc'] },
-  { id: '4', title: 'Productivity Systems for Solopreneurs', url: 'https://notion.so/templates', category: 'WORK', description: 'Setting up a sustainable workflow using the Para method within Notion\'s block-...', date: new Date().toISOString(), pinned: false, tags: ['work', 'notion'] },
-  { id: '5', title: 'The AT Protocol Specification', url: 'https://atproto.com', category: 'SOCIAL', description: 'Documentation for the Authenticated Transfer Protocol, a federated social...', date: new Date().toISOString(), pinned: false, tags: ['social', 'atproto'] },
-  { id: '6', title: 'React-Query Documentation', url: 'https://tanstack.com/query/latest', category: 'DEV', description: 'Comprehensive guide to fetching, caching, and updating asynchronous data in React.', date: new Date().toISOString(), pinned: false, tags: ['react', 'docs'] },
-  { id: '7', title: 'Tailwind CSS Color Palette', url: 'https://tailwindcss.com/docs/customizing-colors', category: 'DESIGN', description: 'A complete reference for customizing your Tailwind CSS color palette.', date: new Date().toISOString(), pinned: false, tags: ['design', 'css'] },
-  { id: '8', title: 'Project Archive Q3', url: 'https://internal-notion.so/rlinks-v2', category: 'WORK', description: 'Documentation and assets from the Q3 rlinks-v2 project sprint.', date: new Date().toISOString(), pinned: false, tags: ['work', 'archive'] },
-  { id: '9', title: 'Twitch Live Dashboard', url: 'https://dashboard.twitch.tv/u/dev_stream', category: 'STREAM', description: 'Live creator dashboard for monitoring stream events and chat in real-time.', date: new Date().toISOString(), pinned: false, tags: ['stream', 'twitch'] },
-  { id: '10', title: 'GitHub Repositories', url: 'https://github.com/r-links-main', category: 'SOCIAL', description: 'Source code repositories and open-source contributions for the R-Links ecosystem.', date: new Date().toISOString(), pinned: false, tags: ['social', 'repo'] },
-];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const useAppStore = create(
   persist(
     (set, get) => ({
-      user: null, // { operatorId: string, level: number, xp: number }
-      links: initialLinks, // Array of { id, url, title, category, tags: [], date, pinned: boolean }
+      user: null, // { operatorId: string, email: string, level: number, xp: number, role: string, photoUrl: string }
+      links: [], // Array of { _id, url, title, category, tags: [], date, pinned: boolean }
       lastAction: null, // { type: 'ADD' | 'UPDATE' | 'DELETE', timestamp: number }
       
       login: (userData) => set({ user: userData }),
-      logout: () => set({ user: null }),
-      updateUser: (updates) => set((state) => ({ user: { ...state.user, ...updates } })),
+      logout: () => {
+        localStorage.removeItem('token');
+        set({ user: null, links: [] });
+      },
+      
+      updateUser: async (updates) => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+          const res = await fetch(`${API_URL}/api/auth/me`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(updates)
+          });
+          const data = await res.json();
+          if (res.ok) {
+            set({ user: data.user });
+          }
+        } catch (err) {
+          console.error('Failed to update user profile', err);
+        }
+      },
+
       dispatchBotEvent: (type) => set({ lastAction: { type, timestamp: Date.now() } }),
       
-      addLink: (link) => set((state) => ({ 
-        links: [{...link, id: Date.now().toString(), date: new Date().toISOString(), pinned: false}, ...state.links],
-        lastAction: { type: 'ADD', timestamp: Date.now() }
-      })),
+      fetchLinks: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+          const res = await fetch(`${API_URL}/api/links`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            // Map MongoDB _id to id for frontend compatibility
+            const links = data.map(l => ({ ...l, id: l._id }));
+            set({ links });
+          }
+        } catch (err) {
+          console.error('Failed to fetch links', err);
+        }
+      },
+
+      addLink: async (link) => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+          const res = await fetch(`${API_URL}/api/links`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(link)
+          });
+          if (res.ok) {
+            const newLink = await res.json();
+            newLink.id = newLink._id; // Map MongoDB _id
+            set((state) => ({ 
+              links: [newLink, ...state.links],
+              lastAction: { type: 'ADD', timestamp: Date.now() }
+            }));
+          }
+        } catch (err) {
+          console.error('Failed to add link', err);
+        }
+      },
       
-      deleteLink: (id) => set((state) => ({
-        links: state.links.filter(l => l.id !== id),
-        lastAction: { type: 'DELETE', timestamp: Date.now() }
-      })),
+      deleteLink: async (id) => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+          const res = await fetch(`${API_URL}/api/links/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            set((state) => ({
+              links: state.links.filter(l => l.id !== id),
+              lastAction: { type: 'DELETE', timestamp: Date.now() }
+            }));
+          }
+        } catch (err) {
+          console.error('Failed to delete link', err);
+        }
+      },
 
-      updateLink: (id, updatedData) => set((state) => ({
-        links: state.links.map(l => l.id === id ? { ...l, ...updatedData } : l),
-        lastAction: { type: 'UPDATE', timestamp: Date.now() }
-      })),
+      updateLink: async (id, updatedData) => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+          const res = await fetch(`${API_URL}/api/links/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(updatedData)
+          });
+          if (res.ok) {
+            set((state) => ({
+              links: state.links.map(l => l.id === id ? { ...l, ...updatedData } : l),
+              lastAction: { type: 'UPDATE', timestamp: Date.now() }
+            }));
+          }
+        } catch (err) {
+          console.error('Failed to update link', err);
+        }
+      },
 
-      togglePin: (id) => set((state) => ({
-        links: state.links.map(l => l.id === id ? { ...l, pinned: !l.pinned } : l)
-      })),
+      togglePin: async (id) => {
+        const link = get().links.find(l => l.id === id);
+        if (link) {
+          await get().updateLink(id, { pinned: !link.pinned });
+        }
+      },
       
       stats: () => {
         const links = get().links;
@@ -54,7 +131,7 @@ const useAppStore = create(
       }
     }),
     {
-      name: 'rlinks-storage', // name of the item in the storage (must be unique)
+      name: 'rlinks-storage', // only user state and offline cache
     }
   )
 );

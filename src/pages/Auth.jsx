@@ -17,7 +17,8 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      const endpoint = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/register';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const endpoint = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/register`;
       const body = isLogin ? { email, password: passphrase } : { operatorId: operator, email, password: passphrase };
 
       const response = await fetch(endpoint, {

@@ -16,6 +16,15 @@ function PrivateRoute({ children }) {
 }
 
 function App() {
+  const fetchLinks = useAppStore(state => state.fetchLinks);
+  const user = useAppStore(state => state.user);
+
+  useEffect(() => {
+    if (user) {
+      fetchLinks();
+    }
+  }, [user, fetchLinks]);
+
   useEffect(() => {
     try {
       const oldDataStr = localStorage.getItem('rlinks_db_v2');
