@@ -26,16 +26,23 @@ const userSchema = new mongoose.Schema({
   xp: {
     type: Number,
     default: 0
+  },
+  role: {
+    type: String,
+    default: 'Senior Link Architect'
+  },
+  photoUrl: {
+    type: String,
+    default: ''
   }
 }, { timestamps: true });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function() {
   const user = this;
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8);
   }
-  next();
 });
 
 // Compare passwords

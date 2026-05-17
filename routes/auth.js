@@ -21,7 +21,7 @@ router.post('/register', async (req, res) => {
     
     const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
-    res.status(201).send({ user: { operatorId: user.operatorId, email: user.email, level: user.level, xp: user.xp }, token });
+    res.status(201).send({ user: { operatorId: user.operatorId, email: user.email, level: user.level, xp: user.xp, role: user.role, photoUrl: user.photoUrl }, token });
   } catch (error) {
     res.status(400).send({ error: error.message });
   }
@@ -44,7 +44,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
-    res.send({ user: { operatorId: user.operatorId, email: user.email, level: user.level, xp: user.xp }, token });
+    res.send({ user: { operatorId: user.operatorId, email: user.email, level: user.level, xp: user.xp, role: user.role, photoUrl: user.photoUrl }, token });
   } catch (error) {
     res.status(400).send();
   }
@@ -52,7 +52,35 @@ router.post('/login', async (req, res) => {
 
 // Get current user profile
 router.get('/me', authMiddleware, async (req, res) => {
-  res.send({ user: { operatorId: req.user.operatorId, email: req.user.email, level: req.user.level, xp: req.user.xp } });
+  res.send({ user: { operatorId: req.user.operatorId, email: req.user.email, level: req.user.level, xp: req.user.xp, role: req.user.role, photoUrl: req.user.photoUrl } });
+});
+
+// Update user profile
+router.patch('/me', authMiddleware, async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ['operatorId', 'username', 'role', 'photoUrl'];
+  const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+
+  if (!isValidOperation) {
+    return res.status(400).send({ error: 'Invalid updates!' });
+  }
+
+  try {
+    // If frontend sends 'username', map it to 'operatorId' for MongoDB
+    if (req.body.username) {
+        req.user.operatorId = req.body.username;
+        delete req.body.username;
+    }
+    
+    updates.forEach(update => {
+        if (update !== 'username') req.user[update] = req.body[update];
+    });
+
+    await req.user.save();
+    res.send({ user: { operatorId: req.user.operatorId, email: req.user.email, level: req.user.level, xp: req.user.xp, role: req.user.role, photoUrl: req.user.photoUrl } });
+  } catch (error) {
+    res.status(400).send({ error: error.message });
+  }
 });
 
 module.exports = router;
