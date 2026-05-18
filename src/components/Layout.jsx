@@ -12,8 +12,8 @@ export default function Layout() {
   };
 
   return (
-    <div className="font-body text-on-surface bg-surface min-h-screen pb-24 pt-20 dotted-grid overflow-x-hidden flex flex-col w-full max-w-[100vw]">
-      <div className="grain-texture"></div>
+    <div className="font-body text-on-surface bg-surface min-h-screen pb-24 pt-20 dotted-grid overflow-x-hidden flex flex-col w-full max-w-[100vw] print:bg-white print:overflow-visible print:h-auto print:min-h-0 print:pt-0 print:pb-0 print:block">
+      <div className="grain-texture print:hidden"></div>
       {/* AI Observer Book Agent — fixed bottom-left, above mobile nav */}
       <div className="print:hidden">
         <BookAgent />
@@ -42,7 +42,7 @@ export default function Layout() {
       </header>
       
       {/* Page Content */}
-      <main className="max-w-6xl mx-auto px-4 md:px-6 space-y-12 relative z-10 w-full flex-grow flex flex-col overflow-x-hidden print:p-0 print:m-0">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 space-y-12 relative z-10 w-full flex-grow flex flex-col overflow-x-hidden print:p-0 print:m-0 print:overflow-visible print:block">
         <Outlet />
       </main>
 

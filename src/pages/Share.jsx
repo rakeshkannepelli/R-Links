@@ -371,8 +371,8 @@ export default function Share() {
                 <tbody>
                     {links.map((link) => (
                         <tr key={link.id} className="border-b border-primary/10">
-                            <td className="py-2 px-4 font-bold">{link.title || link.url}</td>
-                            <td className="py-2 px-4 font-mono text-[10px] break-all">{link.url}</td>
+                            <td className="py-2 px-4 font-bold" style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>{link.title || link.url}</td>
+                            <td className="py-2 px-4 font-mono text-xs" style={{ wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>{link.url}</td>
                             <td className="py-2 px-4">{link.category}</td>
                             <td className="py-2 px-4 text-xs">{new Date(link.date).toLocaleDateString()}</td>
                         </tr>
