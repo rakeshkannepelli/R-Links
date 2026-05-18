@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import useAppStore from './store';
 import Layout from './components/Layout';
 import Auth from './pages/Auth';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Links from './pages/Links';
 import Database from './pages/Database';
@@ -77,6 +78,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
             <Route index element={<Dashboard />} />
             <Route path="links" element={<Links />} />

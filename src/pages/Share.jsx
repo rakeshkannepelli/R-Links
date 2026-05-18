@@ -231,11 +231,6 @@ export default function Share() {
           </p>
         </section>
 
-        {/* Print-only Header for PDF Generation */}
-        <div className="hidden print:block mb-8 border-b-4 border-primary pb-4">
-            <h1 className="text-4xl font-black tracking-tighter uppercase text-primary">RLINKS DATABASE EXPORT</h1>
-            <p className="text-sm font-mono text-primary/60">Total Verified Entries: {links.length} | Generate Date: {new Date().toLocaleDateString()}</p>
-        </div>
 
         {/* Bento-style Layout for Transfer Tools */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-20 print:hidden">
@@ -359,10 +354,15 @@ export default function Share() {
 
         {/* Print Only Data View for PDF generation */}
         <div className="hidden print:block w-full">
-            <table className="w-full text-left text-sm border-collapse">
+            <div className="hidden print:block mb-8 border-b-4 border-primary pb-4">
+                <h1 className="text-4xl font-black tracking-tighter uppercase text-primary">RLINKS DATABASE EXPORT</h1>
+                <p className="text-sm font-mono text-primary/60">Total Links: {links.length} | Generate Date: {new Date().toLocaleDateString()}</p>
+            </div>
+            
+            <table className="w-full text-left text-sm border-collapse mt-4">
                 <thead>
                     <tr className="border-b-2 border-primary/20 bg-surface-container-low">
-                        <th className="py-2 px-4 uppercase text-xs">Title</th>
+                        <th className="py-2 px-4 uppercase text-xs">Name</th>
                         <th className="py-2 px-4 uppercase text-xs">URL</th>
                         <th className="py-2 px-4 uppercase text-xs">Category</th>
                         <th className="py-2 px-4 uppercase text-xs">Date</th>
@@ -371,8 +371,8 @@ export default function Share() {
                 <tbody>
                     {links.map((link) => (
                         <tr key={link.id} className="border-b border-primary/10">
-                            <td className="py-2 px-4 font-bold">{link.title || 'Unknown Entry'}</td>
-                            <td className="py-2 px-4 font-mono text-[10px]">{link.url}</td>
+                            <td className="py-2 px-4 font-bold">{link.title || link.url}</td>
+                            <td className="py-2 px-4 font-mono text-[10px] break-all">{link.url}</td>
                             <td className="py-2 px-4">{link.category}</td>
                             <td className="py-2 px-4 text-xs">{new Date(link.date).toLocaleDateString()}</td>
                         </tr>

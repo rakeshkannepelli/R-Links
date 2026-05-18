@@ -15,10 +15,12 @@ export default function Layout() {
     <div className="font-body text-on-surface bg-surface min-h-screen pb-24 pt-20 dotted-grid overflow-x-hidden flex flex-col w-full max-w-[100vw]">
       <div className="grain-texture"></div>
       {/* AI Observer Book Agent — fixed bottom-left, above mobile nav */}
-      <BookAgent />
+      <div className="print:hidden">
+        <BookAgent />
+      </div>
 
       {/* TopAppBar */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#fbf9f0] border-b-2 border-dashed border-[#5f5e5e]/20 max-w-[100vw]">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#fbf9f0] border-b-2 border-dashed border-[#5f5e5e]/20 max-w-[100vw] print:hidden">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-[#5f5e5e]">terminal</span>
           <h1 className="text-2xl font-black text-[#5f5e5e] tracking-widest font-['Space_Grotesk'] uppercase hidden sm:block">RLINKS</h1>
@@ -40,12 +42,12 @@ export default function Layout() {
       </header>
       
       {/* Page Content */}
-      <main className="max-w-6xl mx-auto px-4 md:px-6 space-y-12 relative z-10 w-full flex-grow flex flex-col overflow-x-hidden">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 space-y-12 relative z-10 w-full flex-grow flex flex-col overflow-x-hidden print:p-0 print:m-0">
         <Outlet />
       </main>
 
       {/* BottomNavBar */}
-      <footer className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-1 pb-6 pt-2 bg-[#fbf9f0] border-t-2 border-[#5f5e5e]/10">
+      <footer className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-1 pb-6 pt-2 bg-[#fbf9f0] border-t-2 border-[#5f5e5e]/10 print:hidden">
         <MobileNav to="/" icon="home" label="HOME" />
         <MobileNav to="/links" icon="link" label="LINKS" />
         <MobileNav to="/database" icon="database" label="INDEX" />

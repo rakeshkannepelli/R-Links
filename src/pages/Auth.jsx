@@ -10,6 +10,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [passphrase, setPassphrase] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgot, setIsForgot] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -18,6 +19,21 @@ export default function Auth() {
 
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
+      if (isForgot) {
+        const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, frontendUrl: window.location.origin })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to send reset link.');
+        toast.success(data.message);
+        setIsForgot(false);
+        setIsLoading(false);
+        return;
+      }
+
       const endpoint = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/register`;
       const body = isLogin ? { email, password: passphrase } : { operatorId: operator, email, password: passphrase };
 
@@ -25,8 +41,6 @@ export default function Auth() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
-      }).catch(() => {
-        throw new Error('BACKEND_OFFLINE');
       });
 
       const data = await response.json();
@@ -41,13 +55,7 @@ export default function Auth() {
       toast.success(isLogin ? "Session Initialized" : "Operator Profile Created");
       navigate('/');
     } catch (error) {
-      if (error.message === 'BACKEND_OFFLINE') {
-        toast('Backend Offline: Using Local Dev Mode', { icon: '⚠️' });
-        login({ operatorId: operator || email.split('@')[0], email: email, level: 1, xp: 0 });
-        navigate('/');
-      } else {
-        toast.error(error.message);
-      }
+      toast.error(error.message === 'Failed to fetch' ? 'Server Unreachable. Please try again later.' : error.message);
     } finally {
       setIsLoading(false);
     }
@@ -85,13 +93,13 @@ export default function Auth() {
               <span className="font-label text-xs tracking-widest text-primary/60 uppercase">System Integrity: Verified</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-headline font-extrabold tracking-tighter text-primary leading-none uppercase">
-              {isLogin ? 'ENTER RLINKS' : 'JOIN RLINKS'} <br />
+              {isForgot ? 'RECOVERY' : isLogin ? 'ENTER RLINKS' : 'JOIN RLINKS'} <br />
               <span className="text-secondary">SYSTEM</span>
             </h1>
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-8 md:space-y-10">
-            {!isLogin && (
+            {(!isLogin && !isForgot) && (
               <div className="relative group">
                 <label className="block font-label text-[10px] font-bold text-primary/50 mb-2 uppercase tracking-widest">
                   [00] OPERATOR_ID
@@ -115,23 +123,36 @@ export default function Auth() {
               </div>
             </div>
 
-            <div className="relative group">
-              <label className="block font-label text-[10px] font-bold text-primary/50 mb-2 uppercase tracking-widest">
-                [02] PASSPHRASE
-              </label>
-              <div className="flex items-center border-b-2 border-primary/20 group-focus-within:border-secondary transition-all">
-                <span className="text-secondary font-bold mr-2 text-xl tracking-tighter">&gt;</span>
-                <input required value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 py-2" placeholder="••••••••" type="password" />
-                <span className="w-3 h-6 bg-secondary/30 hidden group-focus-within:block blink"></span>
+            {!isForgot && (
+              <div className="relative group">
+                <label className="block font-label text-[10px] font-bold text-primary/50 mb-2 uppercase tracking-widest flex justify-between">
+                  <span>[02] PASSPHRASE</span>
+                  {isLogin && (
+                    <button type="button" onClick={() => setIsForgot(true)} className="text-secondary hover:underline cursor-pointer">Forgot?</button>
+                  )}
+                </label>
+                <div className="flex items-center border-b-2 border-primary/20 group-focus-within:border-secondary transition-all">
+                  <span className="text-secondary font-bold mr-2 text-xl tracking-tighter">&gt;</span>
+                  <input required value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 py-2" placeholder="••••••••" type="password" />
+                  <span className="w-3 h-6 bg-secondary/30 hidden group-focus-within:block blink"></span>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="pt-4">
-              <button className="w-full bg-primary text-on-primary py-5 px-8 font-bold flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] hover:bg-on-surface-variant" type="submit">
-                <span className="uppercase tracking-tighter text-lg">{isLogin ? 'INITIALIZE SESSION' : 'CREATE OPERATOR'}</span>
+              <button disabled={isLoading} className="w-full bg-primary text-on-primary py-5 px-8 font-bold flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] hover:bg-on-surface-variant disabled:opacity-50" type="submit">
+                <span className="uppercase tracking-tighter text-lg">{isForgot ? 'SEND RESET LINK' : isLogin ? 'INITIALIZE SESSION' : 'CREATE OPERATOR'}</span>
                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">trending_flat</span>
               </button>
             </div>
+            
+            {isForgot && (
+              <div className="mt-4 text-center">
+                <button type="button" onClick={() => setIsForgot(false)} className="text-primary/60 hover:text-secondary text-xs uppercase font-bold tracking-widest transition-colors">
+                  Back to Login
+                </button>
+              </div>
+            )}
           </form>
 
           {/* OAUTH BLOCK */}

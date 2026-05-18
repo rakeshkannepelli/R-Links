@@ -56,7 +56,7 @@ export default function Links() {
       const category = autoDetect ? autoCategorize(url) : selectedTag || 'WORK';
       addLink({
         url,
-        title: title || `Entry: ${new URL(url).hostname}`,
+        title: title || `${new URL(url).hostname}`,
         category,
         tags: [category.toLowerCase(), 'curated']
       });
