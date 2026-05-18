@@ -57,6 +57,7 @@ function App() {
   return (
     <>
       <Toaster 
+        containerClassName="print:hidden"
         position="top-center" 
         toastOptions={{ 
           duration: 1500,//notification time 
