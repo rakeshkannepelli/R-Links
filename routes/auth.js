@@ -2,6 +2,8 @@ const express = require('express');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middleware/authMiddleware');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const router = new express.Router();
 
@@ -47,6 +49,83 @@ router.post('/login', async (req, res) => {
     res.send({ user: { operatorId: user.operatorId, email: user.email, level: user.level, xp: user.xp, role: user.role, photoUrl: user.photoUrl }, token });
   } catch (error) {
     res.status(400).send();
+  }
+});
+
+// Forgot Password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      // Don't leak whether user exists for security reasons
+      return res.send({ message: 'If that email is in our database, we will send a password reset link.' });
+    }
+
+    // Generate token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    const resetURL = `${req.body.frontendUrl}/reset-password/${resetToken}`;
+    
+    // Check if email is configured
+    if (!process.env.EMAIL_USER || process.env.EMAIL_USER.includes('your_gmail')) {
+      console.log('\n======================================================');
+      console.log('EMAIL NOT CONFIGURED. PRINTING RESET LINK TO CONSOLE:');
+      console.log(resetURL);
+      console.log('======================================================\n');
+      return res.send({ message: 'Development Mode: Reset link printed to server console.' });
+    }
+
+    // Setup nodemailer
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+    
+    const mailOptions = {
+      to: user.email,
+      from: process.env.EMAIL_USER,
+      subject: 'R-LINKS Password Reset',
+      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
+            `Please click on the following link, or paste this into your browser to complete the process within one hour of receiving it:\n\n` +
+            `${resetURL}\n\n` +
+            `If you did not request this, please ignore this email and your password will remain unchanged.\n`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.send({ message: 'If that email is in our database, we will send a password reset link.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error sending email. Please try again.' });
+  }
+});
+
+// Reset Password
+router.post('/reset-password/:token', async (req, res) => {
+  try {
+    const user = await User.findOne({ 
+      resetPasswordToken: req.params.token, 
+      resetPasswordExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) {
+      return res.status(400).send({ error: 'Password reset token is invalid or has expired.' });
+    }
+
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    
+    await user.save();
+    
+    res.send({ message: 'Success! Your password has been changed.' });
+  } catch (error) {
+    res.status(500).send({ error: 'Error resetting password. Please try again.' });
   }
 });
 

@@ -34,7 +34,9 @@ const userSchema = new mongoose.Schema({
   photoUrl: {
     type: String,
     default: ''
-  }
+  },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 }, { timestamps: true });
 
 // Hash password before saving
