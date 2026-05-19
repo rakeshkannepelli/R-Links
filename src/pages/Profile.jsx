@@ -290,6 +290,7 @@ export default function Profile() {
           </button>
         </div>
       </div>
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
     </div>
   );
 }
