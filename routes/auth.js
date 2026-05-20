@@ -3,7 +3,8 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middleware/authMiddleware');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = new express.Router();
 
@@ -49,6 +50,56 @@ router.post('/login', async (req, res) => {
     res.send({ user: { operatorId: user.operatorId, email: user.email, level: user.level, xp: user.xp, role: user.role, photoUrl: user.photoUrl }, token });
   } catch (error) {
     res.status(400).send();
+  }
+});
+
+// Google OAuth Login / Register
+router.post('/google', async (req, res) => {
+  try {
+    const { access_token } = req.body;
+    
+    // Fetch user profile from Google using the access_token
+    const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    
+    if (!googleRes.ok) {
+      throw new Error('Failed to fetch user profile from Google');
+    }
+    
+    const payload = await googleRes.json();
+    const { email, name, picture, sub } = payload;
+    
+    // Check if user already exists in MongoDB
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      // Create new user automatically!
+      // We use the Google ID (sub) as the password hash for safety since they don't have a real password
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      user = new User({
+        operatorId: name.toUpperCase().replace(/\s+/g, '_') + '_' + crypto.randomBytes(2).toString('hex'),
+        email,
+        password: randomPassword,
+        photoUrl: picture
+      });
+      await user.save();
+    } else if (!user.photoUrl && picture) {
+      // If user exists but has no photo, update it
+      user.photoUrl = picture;
+      await user.save();
+    }
+    
+    // Generate our own JWT token for them!
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    
+    res.send({ user: userResponse, token });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    res.status(401).send({ error: 'Google Authentication failed.' });
   }
 });
 
@@ -107,7 +158,7 @@ router.post('/forgot-password', async (req, res) => {
     res.send({ message: 'If that email is in our database, we will send a password reset link.' });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ error: 'Error sending email. Please try again.' });
+    res.status(500).send({ error: `Error sending email: ${error.message}` });
   }
 });
 
