@@ -69,35 +69,41 @@ router.post('/forgot-password', async (req, res) => {
 
     const resetURL = `${req.body.frontendUrl}/reset-password/${resetToken}`;
     
-    // Check if email is configured
-    if (!process.env.EMAIL_USER || process.env.EMAIL_USER.includes('your_gmail')) {
+    // Check if email is configured (Fallback to Console)
+    if (!process.env.RESEND_API_KEY) {
       console.log('\n======================================================');
-      console.log('EMAIL NOT CONFIGURED. PRINTING RESET LINK TO CONSOLE:');
+      console.log('RESEND_API_KEY NOT CONFIGURED. PRINTING RESET LINK TO CONSOLE:');
       console.log(resetURL);
       console.log('======================================================\n');
       return res.send({ message: 'Development Mode: Reset link printed to server console.' });
     }
 
-    // Setup nodemailer
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-    
-    const mailOptions = {
+    // === NEW HTTP EMAIL SYSTEM (Bypasses Render SMTP Block) ===
+    const emailData = {
+      from: 'onboarding@resend.dev', // Resend's default free testing email
       to: user.email,
-      from: process.env.EMAIL_USER,
       subject: 'R-LINKS Password Reset',
-      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
-            `Please click on the following link, or paste this into your browser to complete the process within one hour of receiving it:\n\n` +
-            `${resetURL}\n\n` +
-            `If you did not request this, please ignore this email and your password will remain unchanged.\n`
+      html: `<p>You are receiving this because you requested a password reset.</p>
+             <p>Please click on the following link to complete the process:</p>
+             <p><a href="${resetURL}" style="color: #4CAF50; font-weight: bold;">${resetURL}</a></p>
+             <p>If you did not request this, please ignore this email.</p>`
     };
 
-    await transporter.sendMail(mailOptions);
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+      },
+      body: JSON.stringify(emailData)
+    });
+
+    if (!emailResponse.ok) {
+      const errData = await emailResponse.text();
+      console.error('Email API Error:', errData);
+      throw new Error('Failed to send email via HTTP API');
+    }
+    
     res.send({ message: 'If that email is in our database, we will send a password reset link.' });
   } catch (error) {
     console.error(error);
