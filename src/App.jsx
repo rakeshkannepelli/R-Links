@@ -18,7 +18,12 @@ function PrivateRoute({ children }) {
 
 function App() {
   const fetchLinks = useAppStore(state => state.fetchLinks);
+  const checkAuth = useAppStore(state => state.checkAuth);
   const user = useAppStore(state => state.user);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   useEffect(() => {
     if (user) {

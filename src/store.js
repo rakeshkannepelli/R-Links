@@ -16,6 +16,28 @@ const useAppStore = create(
         set({ user: null, links: [] });
       },
       
+      checkAuth: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            set({ user: null });
+            return;
+          }
+          const res = await fetch(`${API_URL}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            set({ user: data.user });
+          } else {
+            localStorage.removeItem('token');
+            set({ user: null });
+          }
+        } catch (err) {
+          console.error('Session validation failed', err);
+        }
+      },
+
       updateUser: async (updates) => {
         try {
           const token = localStorage.getItem('token');
