@@ -1,7 +1,7 @@
 
-# This is Official source code of Rlinks application(WITH HELP OF AI)
+# This is Official source code of Rlinks application
 ---
- Which is written in (react, expressjs) 
+ Which is written in (react, expressjs) using help of ai 
 ---
 <p>actually this code build using AI tools and with my idea</p>
 in future i shall add very important features 
