@@ -103,6 +103,88 @@ router.post('/google', async (req, res) => {
   }
 });
 
+// GitHub OAuth Login / Register
+router.post('/github', async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    // 1. Exchange the code for an access token
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code
+      })
+    });
+    
+    const tokenData = await tokenResponse.json();
+    if (tokenData.error) {
+      throw new Error(tokenData.error_description || 'GitHub OAuth failed');
+    }
+    
+    const access_token = tokenData.access_token;
+
+    // 2. Fetch user profile from GitHub
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: { 
+        'Authorization': `token ${access_token}`,
+        'User-Agent': 'R-Links-App'
+      }
+    });
+    const githubUser = await userResponse.json();
+
+    // 3. GitHub hides emails by default, so we must fetch them separately
+    const emailResponse = await fetch('https://api.github.com/user/emails', {
+      headers: { 
+        'Authorization': `token ${access_token}`,
+        'User-Agent': 'R-Links-App'
+      }
+    });
+    const emails = await emailResponse.json();
+    const primaryEmailObj = emails.find(e => e.primary) || emails[0];
+    
+    if (!primaryEmailObj) throw new Error('No email found in GitHub account');
+    
+    const email = primaryEmailObj.email;
+    const name = githubUser.name || githubUser.login;
+    const picture = githubUser.avatar_url;
+
+    // 4. Check if user already exists in MongoDB
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      // Create new user automatically!
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      user = new User({
+        operatorId: name.toUpperCase().replace(/[^a-zA-Z0-9]/g, '_') + '_' + crypto.randomBytes(2).toString('hex'),
+        email,
+        password: randomPassword,
+        photoUrl: picture
+      });
+      await user.save();
+    } else if (!user.photoUrl && picture) {
+      user.photoUrl = picture;
+      await user.save();
+    }
+    
+    // 5. Generate our own JWT token!
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    
+    const userDoc = user.toObject();
+    delete userDoc.password;
+    
+    res.send({ user: userDoc, token });
+  } catch (error) {
+    console.error('GitHub Auth Error:', error);
+    res.status(401).send({ error: 'GitHub Authentication failed.' });
+  }
+});
+
 // Forgot Password
 router.post('/forgot-password', async (req, res) => {
   try {
