@@ -55,8 +55,6 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      
       if (isForgot) {
         const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
           method: 'POST',
@@ -98,7 +96,6 @@ export default function Auth() {
     }
   };
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setIsLoading(true);
