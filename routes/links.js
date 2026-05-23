@@ -1,5 +1,4 @@
 const express = require('express');
-const Link = require('../models/Link');
 const authMiddleware = require('../middleware/authMiddleware');
 
 const router = new express.Router();
@@ -7,7 +6,8 @@ const router = new express.Router();
 // GET all links for the logged-in user
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const links = await Link.find({ user: req.user._id }).sort({ date: -1 });
+    // Sort links by date descending
+    const links = req.user.links.sort((a, b) => b.date - a.date);
     res.send(links);
   } catch (error) {
     res.status(500).send({ error: 'Failed to fetch links' });
@@ -17,12 +17,12 @@ router.get('/', authMiddleware, async (req, res) => {
 // POST a new link
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const link = new Link({
-      ...req.body,
-      user: req.user._id
-    });
-    await link.save();
-    res.status(201).send(link);
+    req.user.links.push(req.body);
+    await req.user.save();
+    
+    // Get the newly added link
+    const newLink = req.user.links[req.user.links.length - 1];
+    res.status(201).send(newLink);
   } catch (error) {
     res.status(400).send({ error: error.message });
   }
@@ -39,14 +39,14 @@ router.patch('/:id', authMiddleware, async (req, res) => {
   }
 
   try {
-    const link = await Link.findOne({ _id: req.params.id, user: req.user._id });
+    const link = req.user.links.id(req.params.id);
 
     if (!link) {
       return res.status(404).send({ error: 'Link not found' });
     }
 
     updates.forEach((update) => link[update] = req.body[update]);
-    await link.save();
+    await req.user.save();
     
     res.send(link);
   } catch (error) {
@@ -57,11 +57,14 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 // DELETE a link
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const link = await Link.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    const link = req.user.links.id(req.params.id);
 
     if (!link) {
       return res.status(404).send({ error: 'Link not found' });
     }
+
+    req.user.links.pull(req.params.id);
+    await req.user.save();
 
     res.send(link);
   } catch (error) {

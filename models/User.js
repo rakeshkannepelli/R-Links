@@ -1,6 +1,43 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const linkSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  url: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  category: {
+    type: String,
+    required: true,
+    uppercase: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  tags: [{
+    type: String,
+    lowercase: true,
+    trim: true
+  }],
+  pinned: {
+    type: Boolean,
+    default: false
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  }
+}, { timestamps: true });
+
 const userSchema = new mongoose.Schema({
   operatorId: {
     type: String,
@@ -36,7 +73,8 @@ const userSchema = new mongoose.Schema({
     default: ''
   },
   resetPasswordToken: String,
-  resetPasswordExpires: Date
+  resetPasswordExpires: Date,
+  links: [linkSchema]
 }, { timestamps: true });
 
 // Hash password before saving
