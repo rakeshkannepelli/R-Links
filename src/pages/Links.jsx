@@ -13,7 +13,7 @@ export default function Links() {
   const [autoDetect, setAutoDetect] = useState(true);
   const [selectedTag, setSelectedTag] = useState('');
 
-  const availableTags = ['WORK', 'STREAM', 'AI CHATBOT', 'DEV', 'SOCIAL'];
+  const availableTags = ['WORK', 'STREAM', 'AI CHATBOT', 'DEV', 'SOCIAL', 'GAMING', 'EDUCATION', 'SERVICE'];
 
   const autoCategorize = (urlStr) => {
     try {
@@ -37,6 +37,15 @@ export default function Links() {
       // WORK & PRODUCTIVITY ecosystem
       if (hostname.includes('notion') || hostname.includes('slack') || hostname.includes('trello') || hostname.includes('asana') || hostname.includes('jira') || hostname.includes('linear') || hostname.includes('google')) return 'WORK';
       
+      // GAMING ecosystem
+      if (hostname.includes('steam') || hostname.includes('epicgames') || hostname.includes('ign') || hostname.includes('polygon') || hostname.includes('roblox')) return 'GAMING';
+
+      // EDUCATION ecosystem
+      if (hostname.includes('coursera') || hostname.includes('udemy') || hostname.includes('edx') || hostname.includes('khanacademy') || hostname.includes('mit.edu')) return 'EDUCATION';
+
+      // SERVICE ecosystem
+      if (hostname.includes('aws') || hostname.includes('azure') || hostname.includes('cloudflare') || hostname.includes('digitalocean') || hostname.includes('stripe')) return 'SERVICE';
+
       // Fallback for unrecognized domains
       return 'WORK';
     } catch {
@@ -168,20 +177,29 @@ export default function Links() {
           else if (link.category === 'WORK') badgeColor = 'bg-[#00f99b] text-[#1b1c17] font-black';
           else if (link.category === 'SOCIAL') badgeColor = 'bg-[#c8c6c5] text-[#1b1c17]';
           else if (link.category === 'DESIGN') badgeColor = 'bg-[#00f99b] text-black font-black';
+          else if (link.category === 'GAMING') badgeColor = 'bg-[#8b5cf6] text-white';
+          else if (link.category === 'EDUCATION') badgeColor = 'bg-[#f59e0b] text-white';
+          else if (link.category === 'SERVICE') badgeColor = 'bg-[#06b6d4] text-white';
 
           let iconBgColor = 'bg-[#1b1c17] text-white';
           if (link.category === 'AI CHATBOT') iconBgColor = 'bg-[#1b1c17] text-[#015dce]';
           else if (link.category === 'WORK') iconBgColor = 'bg-white text-[#1b1c17]';
           else if (link.category === 'SOCIAL') iconBgColor = 'bg-[#015dce] text-white';
+          else if (link.category === 'GAMING') iconBgColor = 'bg-[#8b5cf6] text-white';
+          else if (link.category === 'EDUCATION') iconBgColor = 'bg-[#f59e0b] text-white';
+          else if (link.category === 'SERVICE') iconBgColor = 'bg-[#06b6d4] text-white';
 
           // Icons map
           let iconSymbol = 'draft';
           if (link.category === 'DEV') iconSymbol = 'hexagon';
           else if (link.category === 'STREAM') iconSymbol = 'chat_bubble';
-          else if (link.category === 'AI CHATBOT') iconSymbol = 'radio_button_unchecked';
-          else if (link.category === 'WORK') iconSymbol = 'article';
-          else if (link.category === 'SOCIAL') iconSymbol = 'cloud';
+          else if (link.category === 'AI CHATBOT') iconSymbol = 'smart_toy';
+          else if (link.category === 'WORK') iconSymbol = 'work';
+          else if (link.category === 'SOCIAL') iconSymbol = 'hub';
           else if (link.category === 'DESIGN') iconSymbol = 'palette';
+          else if (link.category === 'GAMING') iconSymbol = 'sports_esports';
+          else if (link.category === 'EDUCATION') iconSymbol = 'school';
+          else if (link.category === 'SERVICE') iconSymbol = 'build';
 
           // Generate jagged SVG pattern path
           const jaggedPattern = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'><polygon points='0,0 100,0 100,8 90,10 80,6 70,10 60,7 50,10 40,5 30,10 20,7 10,10 0,6' fill='#fbf9f0'/></svg>`);
@@ -193,7 +211,7 @@ export default function Links() {
                   <div className={`w-8 h-8 border border-primary flex items-center justify-center p-1.5 ${iconBgColor}`}>
                     <span className="material-symbols-outlined text-sm">{iconSymbol}</span>
                   </div>
-                  <span className={`text-[8px] md:text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 ${badgeColor}`}>
+                  <span className={`text-[8px] md:text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 truncate max-w-[100px] md:max-w-[140px] whitespace-nowrap ${badgeColor}`}>
                     {link.category}
                   </span>
                 </div>

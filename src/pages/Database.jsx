@@ -5,9 +5,13 @@ const getCategoryDetails = (category) => {
   const cat = (category || '').toUpperCase();
   if (cat.includes('DESIGN')) return { icon: 'palette', fg: 'text-secondary', bg: 'bg-secondary-container' };
   if (cat.includes('STREAM') || cat.includes('VIDEO')) return { icon: 'movie', fg: 'text-error', bg: 'bg-error-container text-on-error-container' };
-  if (cat.includes('SOCIAL')) return { icon: 'share', fg: 'text-tertiary', bg: 'bg-tertiary-container' };
+  if (cat.includes('SOCIAL')) return { icon: 'hub', fg: 'text-tertiary', bg: 'bg-tertiary-container' };
   if (cat.includes('DEV') || cat.includes('CODE')) return { icon: 'database', fg: 'text-tertiary', bg: 'bg-tertiary-container' };
-  if (cat.includes('WORK')) return { icon: 'terminal', fg: 'text-primary', bg: 'bg-primary-container' };
+  if (cat.includes('WORK')) return { icon: 'work', fg: 'text-primary', bg: 'bg-primary-container' };
+  if (cat.includes('GAMING')) return { icon: 'sports_esports', fg: 'text-[#8b5cf6]', bg: 'bg-[#8b5cf6]/20' };
+  if (cat.includes('EDUCATION')) return { icon: 'school', fg: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/20' };
+  if (cat.includes('SERVICE')) return { icon: 'build', fg: 'text-[#06b6d4]', bg: 'bg-[#06b6d4]/20' };
+  if (cat.includes('AI') || cat.includes('CHATBOT')) return { icon: 'smart_toy', fg: 'text-[#015dce]', bg: 'bg-[#015dce]/20' };
   return { icon: 'deployed_code', fg: 'text-secondary', bg: 'bg-secondary/10' };
 };
 
@@ -56,7 +60,7 @@ export default function Database() {
     setEditingId(null);
   };
 
-  const filterChips = ['ALL_SOURCES', '[DEV]', '[DESIGN]', '[STREAM]', '[WORK]', '[SOCIAL]'];
+  const filterChips = ['ALL_SOURCES', '[DEV]', '[DESIGN]', '[STREAM]', '[WORK]', '[SOCIAL]', '[GAMING]', '[EDUCATION]', '[SERVICE]'];
 
   return (
     <div className="w-full">
@@ -149,6 +153,9 @@ export default function Database() {
                             <option value="WORK" />
                             <option value="SOCIAL" />
                             <option value="AI CHATBOT" />
+                            <option value="GAMING" />
+                            <option value="EDUCATION" />
+                            <option value="SERVICE" />
                             <option value="UNCATEGORIZED" />
                         </datalist>
                       </div>
@@ -168,8 +175,8 @@ export default function Database() {
                     <span className={`material-symbols-outlined ${catDetails.fg}`}>{catDetails.icon}</span>
                   </div>
                   <div className="overflow-hidden w-full">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-[10px] font-bold font-label ${catDetails.fg} ${catDetails.bg} px-1 shrink-0`}>
+                    <div className="flex items-center gap-2 mb-1 overflow-hidden">
+                      <span className={`text-[10px] font-bold font-label ${catDetails.fg} ${catDetails.bg} px-1 shrink-0 truncate max-w-[90px] whitespace-nowrap block`}>
                         [{link.category ? link.category.toUpperCase() : 'UNCATEGORIZED'}]
                       </span>
                       <h3 className="font-bold text-on-background truncate flex-grow text-sm md:text-base leading-tight">

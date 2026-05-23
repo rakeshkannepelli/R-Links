@@ -9,21 +9,21 @@
   body {
     min-height: max(884px, 100dvh);
     font-family: 'Space Grotesk', sans-serif;
-    background-color: #fbf9f0;
+    background-color: #0d0f11;
+    /* Deep charcoal dark fallback */
     color: #1b1c17;
   }
 }
 
 @layer utilities {
   .dotted-grid {
-    background-color: #fbf9f0;
-    /* Vintage Halftone + Soft Vignette */
-    background-image:
-      radial-gradient(circle at 50% 50%, transparent 20%, rgba(58, 74, 63, 0.08) 120%),
-      radial-gradient(rgba(106, 123, 110, 0.25) 1px, transparent 1.5px);
-    background-size: 100% 100%, 14px 14px;
-    background-position: center, 0 0;
+    background-color: #0d0f11;
+    /* High-contrast, dark tech 3D background */
+    background-image: url('/simple-network-bg.png');
+    background-size: 110% 110%;
+    background-position: center;
     background-attachment: fixed;
+    animation: panBackground 40s ease-in-out infinite alternate;
   }
 
   .grain-texture {
@@ -55,6 +55,15 @@
   @keyframes blink-animation {
     to {
       visibility: hidden;
+    }
+  }
+
+  @keyframes panBackground {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 100% 100%;
     }
   }
 

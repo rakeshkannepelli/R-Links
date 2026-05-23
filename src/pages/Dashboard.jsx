@@ -7,6 +7,12 @@ const getIconForCategory = (category) => {
   if (cat.includes('video') || cat.includes('stream')) return 'movie';
   if (cat.includes('music')) return 'music_note';
   if (cat.includes('code') || cat.includes('dev') || cat.includes('css')) return 'code';
+  if (cat.includes('gaming')) return 'sports_esports';
+  if (cat.includes('education')) return 'school';
+  if (cat.includes('service')) return 'build';
+  if (cat.includes('social')) return 'hub';
+  if (cat.includes('work')) return 'work';
+  if (cat.includes('ai') || cat.includes('chatbot')) return 'smart_toy';
   return 'article';
 };
 
@@ -121,7 +127,7 @@ export default function Dashboard() {
                     <div className="flex-grow min-w-0">
                       <h4 className="font-bold tracking-tight text-primary text-sm truncate">{link.title || link.url}</h4>
                       <div className="flex gap-3 mt-0.5 items-center">
-                        <span className="text-[9px] font-bold text-secondary uppercase tracking-tighter bg-secondary/10 px-1.5 py-0">{link.category || 'Uncategorized'}</span>
+                        <span className="text-[9px] font-bold text-secondary uppercase tracking-tighter bg-secondary/10 px-1.5 py-0 truncate max-w-[80px] whitespace-nowrap">{link.category || 'Uncategorized'}</span>
                         <span className="text-[9px] font-bold text-tertiary uppercase tracking-tighter truncate max-w-[150px]">{new URL(link.url).hostname.replace('www.', '')}</span>
                       </div>
                     </div>
