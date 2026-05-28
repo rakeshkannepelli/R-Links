@@ -15,4 +15,6 @@ in future i shall add very important features
 - Oauth from Google
 - Forget password For user
 - Profile photo add and modify option
-- jwt token sign in automatically of user 
+- jwt token sign in automatically of user
+- various interactive imogies in database and links
+  <br>
