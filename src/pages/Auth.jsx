@@ -87,7 +87,7 @@ export default function Auth() {
       localStorage.setItem('token', data.token);
       login(data.user);
 
-      toast.success(isLogin ? "Session Initialized" : "Operator Profile Created");
+      toast.success(isLogin ? "Login Successful" : "Registration Successful");
       navigate('/');
     } catch (error) {
       toast.error(error.message === 'Failed to fetch' ? 'Server Unreachable. Please try again later.' : error.message);
@@ -201,7 +201,7 @@ export default function Auth() {
 
             <div className="pt-4">
               <button disabled={isLoading} className="w-full bg-primary text-on-primary py-5 px-8 font-bold flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] hover:bg-on-surface-variant disabled:opacity-50" type="submit">
-                <span className="uppercase tracking-tighter text-lg">{isForgot ? 'SEND RESET LINK' : isLogin ? 'INITIALIZE SESSION' : 'CREATE OPERATOR'}</span>
+                <span className="uppercase tracking-tighter text-lg">{isForgot ? 'SEND RESET LINK' : isLogin ? 'LOGIN' : 'REGISTER'}</span>
                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">trending_flat</span>
               </button>
             </div>
