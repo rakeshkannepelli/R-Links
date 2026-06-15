@@ -10,10 +10,13 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const API_URL = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:5000'
+        : (import.meta.env.VITE_API_URL || 'http://localhost:5000');
       const response = await fetch(`${API_URL}/api/auth/reset-password/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,20 +58,29 @@ export default function ResetPassword() {
               </label>
               <div className="flex items-center border-b-2 border-primary/20 group-focus-within:border-secondary transition-all">
                 <span className="text-secondary font-bold mr-2 text-xl tracking-tighter">&gt;</span>
-                <input required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 py-2" placeholder="••••••••" type="password" />
+                <input required disabled={isLoading} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 py-2 disabled:opacity-50" placeholder="••••••••" type="password" />
                 <span className="w-3 h-6 bg-secondary/30 hidden group-focus-within:block blink"></span>
               </div>
             </div>
 
             <div className="pt-4">
-              <button disabled={isLoading} className="w-full bg-primary text-on-primary py-5 px-8 font-bold flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] hover:bg-on-surface-variant disabled:opacity-50" type="submit">
-                <span className="uppercase tracking-tighter text-lg">UPDATE PASSPHRASE</span>
+              <button disabled={isLoading} className="w-full bg-primary text-on-primary py-5 px-8 font-bold flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] hover:bg-on-surface-variant disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+                <span className="uppercase tracking-tighter text-lg">
+                  {isLoading ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-3 shrink-0"></span>
+                      RESETTING_PASSPHRASE...
+                    </span>
+                  ) : (
+                    'UPDATE PASSPHRASE'
+                  )}
+                </span>
                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">trending_flat</span>
               </button>
             </div>
             
             <div className="mt-4 text-center">
-              <Link to="/auth" className="text-primary/60 hover:text-secondary text-xs uppercase font-bold tracking-widest transition-colors">
+              <Link to={isLoading ? '#' : '/auth'} className={`text-primary/60 hover:text-secondary text-xs uppercase font-bold tracking-widest transition-colors ${isLoading ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}>
                 Back to Login
               </Link>
             </div>

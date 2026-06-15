@@ -16,7 +16,9 @@ export default function Auth() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const GITHUB_CLIENT_ID = 'Ov23licc8CPvx9v9fWN9';
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : (import.meta.env.VITE_API_URL || 'http://localhost:5000');
 
   useEffect(() => {
     const code = searchParams.get('code');
@@ -52,6 +54,7 @@ export default function Auth() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
@@ -129,16 +132,18 @@ export default function Auth() {
         <nav className="flex w-full mb-0 space-x-0 items-end">
           <button
             type="button"
-            onClick={() => setIsLogin(true)}
-            className={`px-8 py-3 font-bold border-t-2 border-l-2 border-r-2 relative z-20 outline-none transition-colors ${isLogin ? 'bg-surface-container-highest text-secondary border-primary/20' : 'bg-surface-container text-primary/60 border-primary/10 hover:bg-surface-variant'}`}
+            disabled={isLoading}
+            onClick={() => !isLoading && setIsLogin(true)}
+            className={`px-8 py-3 font-bold border-t-2 border-l-2 border-r-2 relative z-20 outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isLogin ? 'bg-surface-container-highest text-secondary border-primary/20' : 'bg-surface-container text-primary/60 border-primary/10 hover:bg-surface-variant'}`}
           >
             LOGIN
             {isLogin && <div className="absolute bottom-[-2px] left-0 w-full h-[3px] bg-surface-container-highest"></div>}
           </button>
           <button
             type="button"
-            onClick={() => setIsLogin(false)}
-            className={`px-8 py-2 font-bold border-t-2 border-l-2 border-r-2 relative z-20 outline-none transition-colors ${!isLogin ? 'bg-surface-container-highest text-secondary border-primary/20 py-3' : 'bg-surface-container text-primary/60 border-primary/10 hover:bg-surface-variant'}`}
+            disabled={isLoading}
+            onClick={() => !isLoading && setIsLogin(false)}
+            className={`px-8 py-2 font-bold border-t-2 border-l-2 border-r-2 relative z-20 outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${!isLogin ? 'bg-surface-container-highest text-secondary border-primary/20 py-3' : 'bg-surface-container text-primary/60 border-primary/10 hover:bg-surface-variant'}`}
           >
             REGISTER
             {!isLogin && <div className="absolute bottom-[-2px] left-0 w-full h-[3px] bg-surface-container-highest"></div>}
@@ -166,7 +171,7 @@ export default function Auth() {
                 </label>
                 <div className="flex items-center border-b-2 border-primary/20 group-focus-within:border-secondary transition-all">
                   <span className="text-secondary font-bold mr-2 text-xl tracking-tighter">&gt;</span>
-                  <input required={!isLogin} value={operator} onChange={(e) => setOperator(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 placeholder:font-normal uppercase py-2" placeholder="NEW_OPERATOR" type="text" />
+                  <input required={!isLogin} disabled={isLoading} value={operator} onChange={(e) => setOperator(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 placeholder:font-normal uppercase py-2 disabled:opacity-50" placeholder="NEW_OPERATOR" type="text" />
                   <span className="w-3 h-6 bg-secondary/30 hidden group-focus-within:block blink"></span>
                 </div>
               </div>
@@ -178,7 +183,7 @@ export default function Auth() {
               </label>
               <div className="flex items-center border-b-2 border-primary/20 group-focus-within:border-secondary transition-all">
                 <span className="text-secondary font-bold mr-2 text-xl tracking-tighter">&gt;</span>
-                <input required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 placeholder:font-normal uppercase py-2" placeholder="OPERATOR@NETWORK.COM" type="email" />
+                <input required disabled={isLoading} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 placeholder:font-normal uppercase py-2 disabled:opacity-50" placeholder="OPERATOR@NETWORK.COM" type="email" />
                 <span className="w-3 h-6 bg-secondary/30 hidden group-focus-within:block blink"></span>
               </div>
             </div>
@@ -188,27 +193,36 @@ export default function Auth() {
                 <label className="block font-label text-[10px] font-bold text-primary/50 mb-2 uppercase tracking-widest flex justify-between">
                   <span>[02] PASSPHRASE</span>
                   {isLogin && (
-                    <button type="button" onClick={() => setIsForgot(true)} className="text-secondary hover:underline cursor-pointer">Forgot?</button>
+                    <button type="button" disabled={isLoading} onClick={() => !isLoading && setIsForgot(true)} className="text-secondary hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Forgot?</button>
                   )}
                 </label>
                 <div className="flex items-center border-b-2 border-primary/20 group-focus-within:border-secondary transition-all">
                   <span className="text-secondary font-bold mr-2 text-xl tracking-tighter">&gt;</span>
-                  <input required value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 py-2" placeholder="••••••••" type="password" />
+                  <input required disabled={isLoading} value={passphrase} onChange={(e) => setPassphrase(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 py-2 disabled:opacity-50" placeholder="••••••••" type="password" />
                   <span className="w-3 h-6 bg-secondary/30 hidden group-focus-within:block blink"></span>
                 </div>
               </div>
             )}
 
             <div className="pt-4">
-              <button disabled={isLoading} className="w-full bg-primary text-on-primary py-5 px-8 font-bold flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] hover:bg-on-surface-variant disabled:opacity-50" type="submit">
-                <span className="uppercase tracking-tighter text-lg">{isForgot ? 'SEND RESET LINK' : isLogin ? 'LOGIN' : 'REGISTER'}</span>
+              <button disabled={isLoading} className="w-full bg-primary text-on-primary py-5 px-8 font-bold flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] hover:bg-on-surface-variant disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+                <span className="uppercase tracking-tighter text-lg">
+                  {isLoading ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-3 shrink-0"></span>
+                      {isForgot ? 'SENDING_LINK...' : isLogin ? 'CONNECTING_TO_HOST...' : 'REGISTERING_OPERATOR...'}
+                    </span>
+                  ) : (
+                    isForgot ? 'SEND RESET LINK' : isLogin ? 'LOGIN' : 'REGISTER'
+                  )}
+                </span>
                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">trending_flat</span>
               </button>
             </div>
             
             {isForgot && (
               <div className="mt-4 text-center">
-                <button type="button" onClick={() => setIsForgot(false)} className="text-primary/60 hover:text-secondary text-xs uppercase font-bold tracking-widest transition-colors">
+                <button type="button" disabled={isLoading} onClick={() => !isLoading && setIsForgot(false)} className="text-primary/60 hover:text-secondary text-xs uppercase font-bold tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                   Back to Login
                 </button>
               </div>
@@ -224,7 +238,7 @@ export default function Auth() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button type="button" onClick={() => googleLogin()} className="w-full border-2 border-primary/20 bg-surface/50 text-primary py-3 px-4 font-bold flex items-center justify-center gap-3 hover:bg-surface transition-colors">
+              <button type="button" disabled={isLoading} onClick={() => !isLoading && googleLogin()} className="w-full border-2 border-primary/20 bg-surface/50 text-primary py-3 px-4 font-bold flex items-center justify-center gap-3 hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -233,7 +247,7 @@ export default function Auth() {
                 </svg>
                 <span className="uppercase tracking-tighter text-xs">Google</span>
               </button>
-              <button type="button" onClick={() => window.location.assign(`https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=user:email`)} className="w-full border-2 border-primary/20 bg-surface/50 text-primary py-3 px-4 font-bold flex items-center justify-center gap-3 hover:bg-surface transition-colors">
+              <button type="button" disabled={isLoading} onClick={() => !isLoading && window.location.assign(`https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=user:email`)} className="w-full border-2 border-primary/20 bg-surface/50 text-primary py-3 px-4 font-bold flex items-center justify-center gap-3 hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
                 <svg className="w-5 h-5 flex-shrink-0 text-primary" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
                 </svg>

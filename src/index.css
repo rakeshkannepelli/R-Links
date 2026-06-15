@@ -18,11 +18,23 @@
 @layer utilities {
   .dotted-grid {
     background-color: #0d0f11;
-    /* High-contrast, dark tech 3D background */
+    position: relative;
+  }
+
+  .dotted-grid::before {
+    content: '';
+    position: fixed;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
     background-image: url('/simple-network-bg.png');
-    background-size: 110% 110%;
+    background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: -1;
+    will-change: transform;
     animation: panBackground 40s ease-in-out infinite alternate;
   }
 
@@ -60,10 +72,10 @@
 
   @keyframes panBackground {
     0% {
-      background-position: 0% 0%;
+      transform: translate3d(0, 0, 0);
     }
     100% {
-      background-position: 100% 100%;
+      transform: translate3d(-3%, -3%, 0);
     }
   }
 
