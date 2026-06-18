@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import HexagonBg from '../components/HexagonBg';
 
 export default function ResetPassword() {
   const { token } = useParams();
@@ -40,6 +41,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 sm:p-6 dotted-grid w-full max-w-[100vw] overflow-x-hidden">
+      <HexagonBg />
       <div className="grain-texture"></div>
 
       <main className="relative w-full max-w-lg z-10 transition-transform duration-300 hover:rotate-0 -rotate-1 pb-16">

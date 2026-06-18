@@ -38,9 +38,15 @@ const DURATION = { [S.ADD]: 3000, [S.UPDATE]: 3200, [S.DEL]: 2600, [S.EXPORT]: 3
 // ══════════════════════════════════════════════════════════════════════════════
 export default function BookAgent() {
   const lastAction = useAppStore(s => s.lastAction);
+  const user = useAppStore(s => s.user);
+  const links = useAppStore(s => s.links);
   const [state, setState] = useState(S.IDLE);
   const [showGreet, setShowGreet] = useState(false);
+  const [greetText, setGreetText] = useState("👋 HI! I'M WATCHING.");
+  const [hovered, setHovered] = useState(false);
+  
   const timer = useRef(null);
+  const clickCount = useRef(0);
 
   // Helper: change state and auto-reset after duration
   const goState = useCallback((next, ms) => {
@@ -72,13 +78,43 @@ export default function BookAgent() {
     e.stopPropagation();
     if (state === S.P2P) return; // don't interrupt P2P
     clearTimeout(timer.current);
+    
+    // Get stats & operator data
+    const total = links.length;
+    const opId = user?.operatorId || 'GUEST';
+    const opLevel = user?.level || 0;
+    
+    let quotes = [];
+    if (!user) {
+      quotes = [
+        "🤖 HELLO HUMAN, This is R-Bot.",
+        "⚠️ SECURITY NOTICE: GUEST ACCESS LOGGED.",
+        "🔑 AWAITING CREDENTIAL SCAN AT AUTH PORTAL...",
+        "🔒 SYSTEM BLOCKED. PLEASE AUTHORIZE PROFILE."
+      ];
+    } else {
+      quotes = [
+        "🤖 HELLO HUMAN, This is R-Bot.",
+        `📖 I OBSERVE ${total} LINKS IN SECURE STORAGE.`,
+        `👤 OPERATOR PROFILE DETECTED: ${opId} (LEVEL ${opLevel}).`,
+        "💎 DATABASE STABILITY: NOMINAL.",
+        "📡 P2P ROUTING PATHWAYS ARE STANDBY FOR PAYLOADS.",
+        "⚡ FEED ME MORE LINK ARTIFACTS, HUMAN!"
+      ];
+    }
+    
+    const idx = clickCount.current % quotes.length;
+    clickCount.current += 1;
+    
+    setGreetText(quotes[idx]);
     setState(S.GREET);
     setShowGreet(true);
+    
     timer.current = setTimeout(() => {
       setShowGreet(false);
       setTimeout(() => setState(S.IDLE), 350);
-    }, DURATION[S.GREET]);
-  }, [state]);
+    }, 3200);
+  }, [state, user, links]);
 
   const face = FACES[state] || FACES[S.IDLE];
   const coverOpen = state === S.ADD || state === S.UPDATE || state === S.EXPORT;
@@ -97,6 +133,8 @@ export default function BookAgent() {
     <>
       {/* ── Fixed container — bottom-left above mobile nav, lower on desktop ── */}
       <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           position: 'fixed',
           bottom: undefined,   // let Tailwind control this
@@ -104,6 +142,8 @@ export default function BookAgent() {
           zIndex: 20,
           userSelect: 'none',
           WebkitUserSelect: 'none',
+          transform: hovered ? 'scale(1.12)' : 'scale(1)',
+          transition: 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}
         className="bottom-24 md:bottom-6"
       >
@@ -116,7 +156,7 @@ export default function BookAgent() {
           {LABELS[state] && (
             <span style={{
               fontSize: 8, fontFamily: 'monospace', fontWeight: 900, letterSpacing: '0.15em',
-              textTransform: 'uppercase', color: COLORS[state],
+              textTransform: 'uppercase', color: face.c, textShadow: `0 0 6px ${face.c}`,
             }}>
               ● {LABELS[state]}
             </span>
@@ -148,19 +188,20 @@ export default function BookAgent() {
           pointerEvents: 'none', zIndex: 30, whiteSpace: 'nowrap',
         }}>
           <div style={{
-            background: '#fbf9f0', border: '2px solid #006d41',
-            boxShadow: '3px 3px 0px #006d41', padding: '5px 10px',
+            background: 'rgba(13, 13, 13, 0.95)', border: '2px solid #00f2ea',
+            boxShadow: '0 0 10px rgba(0, 242, 234, 0.6)', padding: '6px 12px',
             fontFamily: 'monospace', fontSize: 10, fontWeight: 900,
-            color: '#006d41', letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: '#e5e5e5', letterSpacing: '0.12em', textTransform: 'uppercase',
+            borderRadius: '4px',
           }}>
-            👋 HI! I'M WATCHING.
+            {greetText}
           </div>
           {/* Downward arrow */}
           <div style={{
             position: 'absolute', bottom: -7, left: '50%', transform: 'translateX(-50%)',
             width: 0, height: 0,
             borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-            borderTop: '7px solid #006d41',
+            borderTop: '7px solid #00f2ea',
           }} />
         </div>
       </div>
@@ -169,7 +210,7 @@ export default function BookAgent() {
       <style>{`
         @keyframes ba-float  { 0%,100%{transform:rotateX(-18deg) rotateY(-30deg) translateY(0)} 50%{transform:rotateX(-23deg) rotateY(-38deg) translateY(-7px)} }
         @keyframes ba-shake  { 0%,100%{transform:rotateX(-18deg) rotateY(-30deg) translateX(0)} 20%{transform:rotateX(-18deg) rotateY(-30deg) translateX(-7px) rotate(-3deg)} 40%{transform:rotateX(-18deg) rotateY(-30deg) translateX(7px) rotate(3deg)} 60%{transform:rotateX(-18deg) rotateY(-30deg) translateX(-5px) rotate(-2deg)} 80%{transform:rotateX(-18deg) rotateY(-30deg) translateX(5px) rotate(2deg)} }
-        @keyframes ba-jump   { 0%{transform:rotateX(-18deg) rotateY(-30deg) scale(1) translateY(0)} 35%{transform:rotateX(-6deg) rotateY(-8deg) scale(1.2) translateY(-14px)} 65%{transform:rotateX(-14deg) rotateY(-24deg) scale(1.08) translateY(-5px)} 100%{transform:rotateX(-18deg) rotateY(-30deg) scale(1) translateY(0)} }
+        @keyframes ba-jump   { 0%{transform:rotateX(-18deg) rotateY(-30deg) scale(1) translateY(0)} 35%{transform:rotateX(-6deg) rotateY(-8deg) scale(1.15) translateY(-12px) rotate(5deg)} 65%{transform:rotateX(-14deg) rotateY(-24deg) scale(1.05) translateY(-4px)} 100%{transform:rotateX(-18deg) rotateY(-30deg) scale(1) translateY(0)} }
         @keyframes ba-wave   { 0%,100%{transform:rotateX(-18deg) rotateY(-30deg)} 33%{transform:rotateX(-18deg) rotateY(-48deg) translateY(-4px)} 66%{transform:rotateX(-18deg) rotateY(-14deg) translateY(-4px)} }
         @keyframes ba-pulse  { 0%,100%{transform:rotateX(-18deg) rotateY(-30deg) scale(1)} 50%{transform:rotateX(-22deg) rotateY(-36deg) scale(1.07)} }
         @keyframes ba-path   { to { stroke-dashoffset: -18; } }
@@ -179,7 +220,7 @@ export default function BookAgent() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Book3D — the actual 3D CSS book
+// Book3D — the actual 3D CSS book (Updated to holographic cyberpunk styling)
 // ══════════════════════════════════════════════════════════════════════════════
 function Book3D({ face, coverOpen, bookAnim, isDel, isExport, size = 44, onTap, flipped }) {
   const h = Math.round(size * 1.35);
@@ -207,33 +248,34 @@ function Book3D({ face, coverOpen, bookAnim, isDel, isExport, size = 44, onTap, 
         width: '100%', height: '100%', position: 'relative',
         transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
         animation: bookAnim, willChange: 'transform',
-        filter: isDel ? 'drop-shadow(0 0 10px rgba(186,26,26,0.9))' : 'none',
+        filter: isDel ? 'drop-shadow(0 0 10px rgba(239,68,68,0.9))' : 'none',
         transition: 'filter 0.3s ease',
       }}>
 
         {/* ── Back face ── */}
-        <div style={face3('translateZ(-7px)', 'linear-gradient(160deg,#004d2e,#002718)', '1px solid #001810')} />
+        <div style={face3('translateZ(-7px)', 'rgba(20, 20, 20, 0.95)', '1px solid rgba(168, 85, 247, 0.4)')} />
 
         {/* ── Spine (left edge) ── */}
         <div style={{
           position: 'absolute', width: spine, height: '100%', top: 0, left: 0,
-          background: 'linear-gradient(90deg,#001810,#003020)', border: '1px solid #001010',
+          background: 'linear-gradient(90deg, #0d0d0d, #1a1a1a)', border: '1px solid rgba(0, 242, 234, 0.4)',
           transform: 'rotateY(-90deg) translateZ(0)',
           transformOrigin: 'left center', WebkitTransformOrigin: 'left center',
           backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <span style={{
-            fontFamily: 'monospace', fontSize: 6, fontWeight: 900, color: 'rgba(0,249,155,0.7)',
+            fontFamily: 'monospace', fontSize: 6, fontWeight: 900, color: 'rgba(0, 242, 234, 0.8)',
             letterSpacing: '0.3em', writingMode: 'vertical-rl', textOrientation: 'mixed',
+            textShadow: '0 0 4px rgba(0, 242, 234, 0.6)',
           }}>RLINKS</span>
         </div>
 
         {/* ── Pages edge (right) ── */}
         <div style={{
           position: 'absolute', width: pages, height: '100%', top: 0, right: 0,
-          background: 'repeating-linear-gradient(0deg,#e8e4d4 0,#e8e4d4 2px,#fbf9f0 2px,#fbf9f0 5px)',
-          border: '1px solid #c4c0b0',
+          background: 'repeating-linear-gradient(0deg, #111111 0, #111111 2px, #00f2ea 2px, #00f2ea 3px)',
+          border: '1px solid rgba(0, 242, 234, 0.3)',
           transform: `rotateY(90deg) translateZ(${size - pages}px)`,
           transformOrigin: 'right center', WebkitTransformOrigin: 'right center',
           backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
@@ -242,36 +284,38 @@ function Book3D({ face, coverOpen, bookAnim, isDel, isExport, size = 44, onTap, 
         {/* ── Top edge ── */}
         <div style={{
           position: 'absolute', width: '100%', height: spine, top: 0, left: 0,
-          background: 'linear-gradient(180deg,#fbf9f0,#e4e0d0)', border: '1px solid #c4c0b0',
+          background: 'linear-gradient(180deg, #1a1a1a, #0d0d0d)', border: '1px solid rgba(0, 242, 234, 0.3)',
           transform: 'rotateX(90deg)', transformOrigin: 'top center', WebkitTransformOrigin: 'top center',
           backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
         }} />
 
-        {/* ── Inner page ── */}
+        {/* ── Inner page (circuit styled) ── */}
         <div style={{
           position: 'absolute', width: '100%', height: '100%', top: 0, left: 0,
-          background: isExport ? '#fffde8' : '#fbf9f0',
-          border: '1px solid #d0ccbc',
+          background: '#090909',
+          border: '1px solid rgba(0, 242, 234, 0.4)',
           transform: coverOpen ? 'rotateY(-38deg) translateZ(-1px)' : 'translateZ(-1px)',
           transformOrigin: 'left center', WebkitTransformOrigin: 'left center',
           transition: 'transform 0.7s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.4s ease',
-          boxShadow: coverOpen ? (isExport ? 'inset 0 0 25px rgba(255,180,0,0.35)' : 'inset 0 0 25px rgba(0,249,155,0.35)') : 'none',
+          boxShadow: coverOpen ? (isExport ? 'inset 0 0 15px rgba(168, 85, 247, 0.5)' : 'inset 0 0 15px rgba(0, 242, 234, 0.5)') : 'none',
           backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', overflow: 'hidden',
         }}>
-          {/* Ruled lines */}
+          {/* Neon terminal line grids */}
           {[0, 1, 2, 3, 4].map(i => (
             <div key={i} style={{
-              position: 'absolute', left: 5, right: 5, top: 9 + i * 7, height: 1,
+              position: 'absolute', left: 4, right: 4, top: 9 + i * 7, height: 1,
               background: coverOpen
-                ? (isExport ? 'rgba(180,140,0,0.5)' : 'rgba(0,249,155,0.5)')
-                : 'rgba(106,123,110,0.2)',
+                ? (isExport ? 'rgba(168, 85, 247, 0.4)' : 'rgba(0, 242, 234, 0.4)')
+                : 'rgba(0, 242, 234, 0.1)',
               transition: 'background 0.4s ease',
+              boxShadow: coverOpen ? '0 0 2px rgba(0, 242, 234, 0.3)' : 'none',
             }} />
           ))}
-          {/* Dot indicator top-left */}
+          {/* Data dot indicator */}
           <div style={{
-            position: 'absolute', top: 6, left: 6, width: 5, height: 5, borderRadius: '50%',
-            background: coverOpen ? (isExport ? '#ffd740' : '#00f99b') : 'transparent',
+            position: 'absolute', top: 5, left: 5, width: 4, height: 4, borderRadius: '50%',
+            background: coverOpen ? (isExport ? '#a855f7' : '#00f2ea') : 'transparent',
+            boxShadow: coverOpen ? `0 0 6px ${isExport ? '#a855f7' : '#00f2ea'}` : 'none',
             transition: 'background 0.4s ease',
           }} />
         </div>
@@ -279,25 +323,37 @@ function Book3D({ face, coverOpen, bookAnim, isDel, isExport, size = 44, onTap, 
         {/* ── Front cover (swings open) ── */}
         <div style={{
           position: 'absolute', width: '100%', height: '100%', top: 0, left: 0,
-          background: 'linear-gradient(145deg,#008050,#005030,#003820)',
-          border: '1.5px solid #001810',
+          background: 'linear-gradient(145deg, #0d0d0d, #141414)',
+          border: '1.5px solid #00f2ea',
           transform: coverOpen ? 'rotateY(-152deg) translateZ(7px)' : 'translateZ(7px)',
           transformOrigin: 'left center', WebkitTransformOrigin: 'left center',
           transition: 'transform 0.75s cubic-bezier(0.34,1.56,0.64,1)',
-          boxShadow: '4px 4px 0px #001810',
+          boxShadow: '0 0 12px rgba(0, 242, 234, 0.4), inset 0 0 8px rgba(0, 242, 234, 0.2)',
           backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', overflow: 'hidden',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
         }}>
-          {/* Corner accents */}
-          <div style={{ position: 'absolute', top: 4, left: 4, width: 8, height: 8, borderTop: '1.5px solid rgba(0,249,155,0.4)', borderLeft: '1.5px solid rgba(0,249,155,0.4)' }} />
-          <div style={{ position: 'absolute', bottom: 4, right: 4, width: 8, height: 8, borderBottom: '1.5px solid rgba(0,249,155,0.4)', borderRight: '1.5px solid rgba(0,249,155,0.4)' }} />
-          {/* Emoji face */}
-          <div style={{ fontFamily: 'monospace', fontSize: size < 42 ? 9 : 11, fontWeight: 900, color: face.c, textAlign: 'center', lineHeight: 1.4, transition: 'color 0.4s ease' }}>
+          {/* Cyber accents corners */}
+          <div style={{ position: 'absolute', top: 3, left: 3, width: 6, height: 6, borderTop: '1.5px solid #00f2ea', borderLeft: '1.5px solid #00f2ea', boxShadow: '0 0 3px #00f2ea' }} />
+          <div style={{ position: 'absolute', bottom: 3, right: 3, width: 6, height: 6, borderBottom: '1.5px solid #00f2ea', borderRight: '1.5px solid #00f2ea', boxShadow: '0 0 3px #00f2ea' }} />
+          
+          {/* Glowing Emoji face */}
+          <div style={{
+            fontFamily: 'monospace', fontSize: size < 42 ? 9 : 11, fontWeight: 900,
+            color: face.c, textAlign: 'center', lineHeight: 1.4, transition: 'color 0.4s ease',
+            textShadow: `0 0 8px ${face.c}`,
+          }}>
             <div>{face.e}</div>
-            <div>{face.m}</div>
+            <div style={{ marginTop: -2 }}>{face.m}</div>
           </div>
-          {/* DB badge */}
-          <div style={{ border: `1px solid ${face.c}`, padding: '1px 4px', fontFamily: 'monospace', fontSize: 7, fontWeight: 900, color: face.c, letterSpacing: '0.1em', transition: 'color 0.3s,border-color 0.3s' }}>
+          
+          {/* Cyber DB badge */}
+          <div style={{
+            border: `1.5px solid ${face.c}`, padding: '1px 4px', fontFamily: 'monospace',
+            fontSize: 7, fontWeight: 900, color: face.c, letterSpacing: '0.1em',
+            boxShadow: `0 0 6px ${face.c}`, textShadow: `0 0 4px ${face.c}`,
+            transition: 'color 0.3s, border-color 0.3s, box-shadow 0.3s',
+            background: 'rgba(0,0,0,0.4)',
+          }}>
             DB
           </div>
         </div>
@@ -310,17 +366,17 @@ function Book3D({ face, coverOpen, bookAnim, isDel, isExport, size = 44, onTap, 
 function P2PPath() {
   return (
     <svg width={40} height={50} viewBox="0 0 40 50" style={{ flexShrink: 0 }}>
-      <path d="M4 25 Q20 6 36 25" fill="none" stroke="#0059c6" strokeWidth={2}
+      <path d="M4 25 Q20 6 36 25" fill="none" stroke="#00f2ea" strokeWidth={2}
         strokeDasharray="5 3" strokeLinecap="round"
         style={{ animation: 'ba-path 0.9s linear infinite' }} />
-      <path d="M4 25 Q20 44 36 25" fill="none" stroke="#afc6ff" strokeWidth={1.5}
+      <path d="M4 25 Q20 44 36 25" fill="none" stroke="#a855f7" strokeWidth={1.5}
         strokeDasharray="3 5" strokeLinecap="round"
         style={{ animation: 'ba-path 1.3s linear infinite reverse' }} />
       {/* Moving dot */}
-      <circle r={3} fill="#0059c6">
+      <circle r={3} fill="#00f2ea" style={{ filter: 'drop-shadow(0 0 3px #00f2ea)' }}>
         <animateMotion dur="1s" repeatCount="indefinite" path="M4 25 Q20 6 36 25" />
       </circle>
-      <circle r={2} fill="#afc6ff" opacity={0.8}>
+      <circle r={2} fill="#a855f7" opacity={0.9} style={{ filter: 'drop-shadow(0 0 3px #a855f7)' }}>
         <animateMotion dur="1.4s" repeatCount="indefinite" path="M36 25 Q20 44 4 25" />
       </circle>
     </svg>
@@ -336,3 +392,4 @@ function face3(transform, bg, border) {
     backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
   };
 }
+

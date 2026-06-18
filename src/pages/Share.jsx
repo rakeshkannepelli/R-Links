@@ -293,23 +293,91 @@ export default function Share() {
 
               {activeMode === 'RECEIVE' && !connected && (
                 <div className="space-y-4">
-                  <div className="bg-surface-container border border-outline/20 p-6 text-center">
-                    <p className="text-[10px] font-bold text-outline uppercase tracking-widest mb-4">TELL THE SENDER TO ENTER THIS ID:</p>
-                    <div className="text-3xl sm:text-5xl font-black text-secondary tracking-tighter mb-4">{peerId || '...'}</div>
-                    <p className="text-[10px] font-bold text-[#00f99b] uppercase tracking-widest mt-2 flex justify-center items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#00f99b] animate-ping"></span> WAITING FOR SENDER NODE...</p>
+                  <div className="glitch-input-wrapper">
+                    <div className="input-container">
+                      <input
+                        type="text"
+                        id="holo-input-receive"
+                        className="holo-input"
+                        placeholder=" "
+                        required
+                        readOnly
+                        value={peerId || '...'}
+                      />
+                      <label htmlFor="holo-input-receive" className="input-label" data-text="MY_NODE_ID">
+                        MY_NODE_ID
+                      </label>
+                      
+                      <div className="input-border"></div>
+                      <div className="input-scanline"></div>
+                      <div className="input-glow"></div>
+                      
+                      <div className="input-data-stream">
+                        <div className="stream-bar" style={{ '--i': 0 }}></div>
+                        <div className="stream-bar" style={{ '--i': 1 }}></div>
+                        <div className="stream-bar" style={{ '--i': 2 }}></div>
+                        <div className="stream-bar" style={{ '--i': 3 }}></div>
+                        <div className="stream-bar" style={{ '--i': 4 }}></div>
+                        <div className="stream-bar" style={{ '--i': 5 }}></div>
+                        <div className="stream-bar" style={{ '--i': 6 }}></div>
+                        <div className="stream-bar" style={{ '--i': 7 }}></div>
+                        <div className="stream-bar" style={{ '--i': 8 }}></div>
+                        <div className="stream-bar" style={{ '--i': 9 }}></div>
+                      </div>
+                      
+                      <div className="input-corners">
+                        <div className="corner corner-tl"></div>
+                        <div className="corner corner-tr"></div>
+                        <div className="corner corner-bl"></div>
+                        <div className="corner corner-br"></div>
+                      </div>
+                    </div>
                   </div>
+                  <p className="text-[10px] font-bold text-[#00f99b] uppercase tracking-widest mt-2 flex justify-center items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#00f99b] animate-ping"></span> WAITING FOR SENDER NODE...</p>
                   <button onClick={closeConnection} className="w-full bg-surface-container text-primary py-3 font-bold uppercase tracking-widest text-xs border border-outline/20 hover:bg-surface transition-all">Cancel</button>
                 </div>
               )}
 
               {activeMode === 'PRE_SEND' && !connected && (
                 <div className="space-y-4">
-                  <div className="bg-surface-container border border-outline/20 p-4 relative group">
-                    <div className="absolute -top-2 left-3 bg-surface-container-low px-1.5 text-[9px] font-black tracking-widest uppercase text-secondary">TARGET DIRECTORY</div>
-                    <label className="text-[10px] font-bold text-outline my-2 uppercase tracking-widest block">ENTER THE RECEIVER'S NODE ID:</label>
-                    <div className="flex border border-outline/20 focus-within:border-secondary transition-colors">
-                      <span className="bg-primary/5 px-3 py-2 flex items-center justify-center border-r border-outline/20 text-primary/40 material-symbols-outlined text-sm">radar</span>
-                      <input type="text" value={targetIdValue} onChange={e => setTargetIdValue(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} placeholder="e.g. node-x7yz" className="w-full bg-transparent p-3 sm:p-4 text-primary font-bold tracking-widest text-sm sm:text-lg outline-none font-mono" />
+                  <div className="glitch-input-wrapper">
+                    <div className="input-container">
+                      <input
+                        type="text"
+                        id="holo-input-send"
+                        className="holo-input"
+                        placeholder=" "
+                        required
+                        value={targetIdValue}
+                        onChange={e => setTargetIdValue(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      />
+                      <label htmlFor="holo-input-send" className="input-label" data-text="RECEIVER_NODE_ID">
+                        RECEIVER_NODE_ID
+                      </label>
+                      
+                      <div className="input-border"></div>
+                      <div className="input-scanline"></div>
+                      <div className="input-glow"></div>
+                      
+                      <div className="input-data-stream">
+                        <div className="stream-bar" style={{ '--i': 0 }}></div>
+                        <div className="stream-bar" style={{ '--i': 1 }}></div>
+                        <div className="stream-bar" style={{ '--i': 2 }}></div>
+                        <div className="stream-bar" style={{ '--i': 3 }}></div>
+                        <div className="stream-bar" style={{ '--i': 4 }}></div>
+                        <div className="stream-bar" style={{ '--i': 5 }}></div>
+                        <div className="stream-bar" style={{ '--i': 6 }}></div>
+                        <div className="stream-bar" style={{ '--i': 7 }}></div>
+                        <div className="stream-bar" style={{ '--i': 8 }}></div>
+                        <div className="stream-bar" style={{ '--i': 9 }}></div>
+                      </div>
+                      
+                      <div className="input-corners">
+                        <div className="corner corner-tl"></div>
+                        <div className="corner corner-tr"></div>
+                        <div className="corner corner-bl"></div>
+                        <div className="corner corner-br"></div>
+                      </div>
                     </div>
                   </div>
 

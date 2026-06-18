@@ -20,10 +20,10 @@ export default function Database() {
   const deleteLink = useAppStore(state => state.deleteLink);
   const updateLink = useAppStore(state => state.updateLink);
   const total = useAppStore(state => state.stats().total);
-  
+
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('ALL_SOURCES');
-  
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -35,10 +35,10 @@ export default function Database() {
   const [editCategory, setEditCategory] = useState('');
 
   const filteredLinks = links.filter(l => {
-    const matchesSearch = l.title?.toLowerCase().includes(search.toLowerCase()) || 
-                          l.url.toLowerCase().includes(search.toLowerCase()) ||
-                          l.category?.toLowerCase().includes(search.toLowerCase());
-    
+    const matchesSearch = l.title?.toLowerCase().includes(search.toLowerCase()) ||
+      l.url.toLowerCase().includes(search.toLowerCase()) ||
+      l.category?.toLowerCase().includes(search.toLowerCase());
+
     if (filterCategory === 'ALL_SOURCES') return matchesSearch;
     return matchesSearch && l.category?.toUpperCase() === filterCategory.replace('[', '').replace(']', '');
   });
@@ -89,9 +89,9 @@ export default function Database() {
       <div className="relative mb-12">
         <div className="flex items-center border-b-2 border-primary pb-2 overflow-hidden group focus-within:border-secondary transition-colors">
           <span className="text-secondary font-bold text-xl mr-3 font-mono">&gt;</span>
-          <input 
-            className="bg-transparent border-none focus:ring-0 w-full text-sm md:text-lg placeholder:text-primary/30 font-headline outline-none" 
-            placeholder="Search entries by title, domain, or category..." 
+          <input
+            className="bg-transparent border-none focus:ring-0 w-full text-sm md:text-lg text-secondary-fixed placeholder:text-primary/30 font-headline outline-none"
+            placeholder="Search entries by title, domain, or category..."
             type="text"
             value={search}
             onChange={(e) => {
@@ -106,12 +106,12 @@ export default function Database() {
       {/* Filter Chips */}
       <div className="flex flex-wrap gap-2 mb-8">
         {filterChips.map(chip => (
-          <button 
-            key={chip} 
+          <button
+            key={chip}
             onClick={() => {
               setFilterCategory(chip);
               setCurrentPage(1);
-            }} 
+            }}
             className={`px-3 py-1 text-[10px] font-bold font-label border-2 transition-colors ${filterCategory === chip ? 'border-secondary bg-secondary-container text-on-secondary-container' : 'border-outline-variant hover:border-primary text-primary'}`}
           >
             {chip}
@@ -127,48 +127,48 @@ export default function Database() {
           </div>
         ) : (
           paginatedLinks.map((link, index) => {
-             const rot = ['rotate-[0.3deg]', 'rotate-[-0.5deg]', 'rotate-[0.2deg]', 'rotate-[-0.2deg]', 'rotate-[0.4deg]'][index % 5];
-             const catDetails = getCategoryDetails(link.category);
-             
-             if (editingId === link.id) {
-                return (
-                  <form key={link.id} onSubmit={handleSaveEdit} className={`bg-surface-container-highest p-4 border-2 border-secondary sticky-note flex flex-col md:flex-row gap-4 items-start md:items-center justify-between transition-all ${rot}`}>
-                    <div className="flex-grow space-y-3 w-full">
-                      <input required type="text" value={editTitle} onChange={(e)=>setEditTitle(e.target.value)} className="w-full bg-surface border-2 border-outline/50 px-2 py-1 text-sm font-bold outline-none focus:border-secondary" placeholder="Title" />
-                      <div className="flex gap-2">
-                        <input required type="url" value={editUrl} onChange={(e)=>setEditUrl(e.target.value)} className="w-full bg-surface border-2 border-outline/50 px-2 py-1 text-xs font-mono outline-none focus:border-secondary" placeholder="URL" />
-                        <input 
-                          required 
-                          type="text" 
-                          list="category-options" 
-                          value={editCategory} 
-                          onChange={(e) => setEditCategory(e.target.value.toUpperCase())} 
-                          className="bg-surface border-2 border-outline/50 px-2 py-1 text-xs font-bold outline-none focus:border-secondary uppercase w-1/3 min-w-[120px]" 
-                          placeholder="CATEGORY" 
-                        />
-                        <datalist id="category-options">
-                            <option value="DEV" />
-                            <option value="DESIGN" />
-                            <option value="STREAM" />
-                            <option value="WORK" />
-                            <option value="SOCIAL" />
-                            <option value="AI CHATBOT" />
-                            <option value="GAMING" />
-                            <option value="EDUCATION" />
-                            <option value="SERVICE" />
-                            <option value="UNCATEGORIZED" />
-                        </datalist>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0">
-                      <button type="submit" className="bg-secondary text-white px-4 py-2 text-xs font-bold uppercase w-full md:w-auto">SAVE</button>
-                      <button type="button" onClick={() => setEditingId(null)} className="border-2 border-outline px-4 py-2 text-xs font-bold uppercase w-full md:w-auto hover:bg-surface-variant">CANCEL</button>
-                    </div>
-                  </form>
-                );
-             }
+            const rot = ['rotate-[0.3deg]', 'rotate-[-0.5deg]', 'rotate-[0.2deg]', 'rotate-[-0.2deg]', 'rotate-[0.4deg]'][index % 5];
+            const catDetails = getCategoryDetails(link.category);
 
-             return (
+            if (editingId === link.id) {
+              return (
+                <form key={link.id} onSubmit={handleSaveEdit} className={`bg-surface-container-highest p-4 border-2 border-secondary sticky-note flex flex-col md:flex-row gap-4 items-start md:items-center justify-between transition-all ${rot}`}>
+                  <div className="flex-grow space-y-3 w-full">
+                    <input required type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full bg-surface border-2 border-outline/50 px-2 py-1 text-sm font-bold outline-none focus:border-secondary" placeholder="Title" />
+                    <div className="flex gap-2">
+                      <input required type="url" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} className="w-full bg-surface border-2 border-outline/50 px-2 py-1 text-xs font-mono outline-none focus:border-secondary" placeholder="URL" />
+                      <input
+                        required
+                        type="text"
+                        list="category-options"
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value.toUpperCase())}
+                        className="bg-surface border-2 border-outline/50 px-2 py-1 text-xs font-bold outline-none focus:border-secondary uppercase w-1/3 min-w-[120px]"
+                        placeholder="CATEGORY"
+                      />
+                      <datalist id="category-options">
+                        <option value="DEV" />
+                        <option value="DESIGN" />
+                        <option value="STREAM" />
+                        <option value="WORK" />
+                        <option value="SOCIAL" />
+                        <option value="AI CHATBOT" />
+                        <option value="GAMING" />
+                        <option value="EDUCATION" />
+                        <option value="SERVICE" />
+                        <option value="UNCATEGORIZED" />
+                      </datalist>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0">
+                    <button type="submit" className="bg-secondary text-white px-4 py-2 text-xs font-bold uppercase w-full md:w-auto">SAVE</button>
+                    <button type="button" onClick={() => setEditingId(null)} className="border-2 border-outline px-4 py-2 text-xs font-bold uppercase w-full md:w-auto hover:bg-surface-variant">CANCEL</button>
+                  </div>
+                </form>
+              );
+            }
+
+            return (
               <div key={link.id} className={`bg-surface-container-highest p-4 flex flex-col md:flex-row items-start md:items-center justify-between group transition-all hover:bg-[#f5f9f0] border-2 border-transparent hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_#00f99b] ${rot}`}>
                 <div className="flex items-center gap-4 overflow-hidden w-full md:w-3/4">
                   <div className="w-10 h-10 bg-surface flex items-center justify-center border-2 border-primary/10 shrink-0">
@@ -199,19 +199,19 @@ export default function Database() {
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="mt-8 flex justify-between items-center bg-surface-container-low border-2 border-primary/10 p-2">
-          <button 
+          <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => p - 1)}
             className={`font-bold font-label text-[10px] tracking-widest uppercase px-4 py-2 border-2 ${currentPage === 1 ? 'border-outline-variant text-outline opacity-50' : 'border-primary text-primary hover:bg-primary hover:text-on-primary'} transition-colors`}
           >
             &lt; PREV
           </button>
-          
+
           <div className="font-mono text-xs font-bold text-primary/60 tracking-widest">
             PG_{currentPage.toString().padStart(2, '0')}/{totalPages.toString().padStart(2, '0')}
           </div>
-          
-          <button 
+
+          <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => p + 1)}
             className={`font-bold font-label text-[10px] tracking-widest uppercase px-4 py-2 border-2 ${currentPage === totalPages ? 'border-outline-variant text-outline opacity-50' : 'border-primary text-primary hover:bg-primary hover:text-on-primary'} transition-colors`}

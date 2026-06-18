@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import useAppStore from '../store';
 import BookAgent from './BookAgent';
+import HexagonBg from './HexagonBg';
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function Layout() {
 
   return (
     <div className="font-body text-on-surface bg-surface min-h-screen pb-24 pt-20 dotted-grid overflow-x-hidden flex flex-col w-full max-w-[100vw] print:bg-white print:overflow-visible print:h-auto print:min-h-0 print:pt-0 print:pb-0 print:block">
+      <HexagonBg />
       <div className="grain-texture print:hidden"></div>
       {/* AI Observer Book Agent — fixed bottom-left, above mobile nav */}
       <div className="print:hidden">
