@@ -18,3 +18,5 @@ in future i shall add very important features
 - jwt token sign in automatically of user
 - various interactive imogies in database and links
   <br>
+
+  -- for now this application is only in free tier so after soon few update may be changes could happen.
