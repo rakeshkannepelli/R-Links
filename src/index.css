@@ -114,6 +114,69 @@
     margin-left: 4px;
     animation: blink-animation 1s steps(2, start) infinite;
   }
+
+  /* 3D Tactile Card & Button Utilities */
+  .card-3d {
+    background: #fbf9f0;
+    border: 2px solid #5f5e5e;
+    box-shadow: 4px 4px 0px #006d41, 0 8px 16px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-3d:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px #006d41, 0 12px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .btn-3d {
+    position: relative;
+    border: 2px solid #5f5e5e;
+    box-shadow: 3px 3px 0px #006d41;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .btn-3d:hover {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0px #006d41;
+  }
+  .btn-3d:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #006d41;
+  }
+
+  .btn-3d-secondary {
+    position: relative;
+    border: 2px solid #5f5e5e;
+    box-shadow: 3px 3px 0px rgba(95, 94, 94, 0.25);
+    transition: all 0.15s ease;
+  }
+  .btn-3d-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0px rgba(95, 94, 94, 0.35);
+  }
+  .btn-3d-secondary:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px rgba(95, 94, 94, 0.25);
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes progress {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes pageFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-enter {
+    animation: pageFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
 }
 
 /* --- Uiverse Component: Rude Cobra 30 --- */
@@ -378,5 +441,59 @@
   50% {
     transform: scaleY(1);
     opacity: 0.8;
+  }
+}
+
+/* --- Clean PDF & Print Rules --- */
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    font-size: 11pt !important;
+  }
+
+  header, footer, nav, canvas, .grain-texture, .print\:hidden {
+    display: none !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  th, td {
+    border: 1px solid #333333 !important;
+    padding: 6px 8px !important;
+    color: #000000 !important;
   }
 }

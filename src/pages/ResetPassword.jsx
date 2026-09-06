@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import HexagonBg from '../components/HexagonBg';
+import { API_URL } from '../config';
 
 export default function ResetPassword() {
   const { token } = useParams();
@@ -15,9 +16,6 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const API_URL = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'http://localhost:5000'
-        : (import.meta.env.VITE_API_URL || 'http://localhost:5000');
       const response = await fetch(`${API_URL}/api/auth/reset-password/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

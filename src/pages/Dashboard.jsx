@@ -1,22 +1,10 @@
 import { Link } from 'react-router-dom';
 import useAppStore from '../store';
-
-const getIconForCategory = (category) => {
-  const cat = (category || '').toLowerCase();
-  if (cat.includes('design')) return 'design_services';
-  if (cat.includes('video') || cat.includes('stream')) return 'movie';
-  if (cat.includes('music')) return 'music_note';
-  if (cat.includes('code') || cat.includes('dev') || cat.includes('css')) return 'code';
-  if (cat.includes('gaming')) return 'sports_esports';
-  if (cat.includes('education')) return 'school';
-  if (cat.includes('service')) return 'build';
-  if (cat.includes('social')) return 'hub';
-  if (cat.includes('work')) return 'work';
-  if (cat.includes('ai') || cat.includes('chatbot')) return 'smart_toy';
-  return 'article';
-};
+import Icon3D, { getCategoryTheme } from '../components/Icon3D';
+import { PlusCircle, Database, ExternalLink, ArrowRight, Activity, ShieldCheck, Sparkles } from 'lucide-react';
 
 const timeAgo = (date) => {
+  if (!date) return 'Recently';
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return `${Math.max(1, mins)}m ago`;
@@ -28,120 +16,207 @@ const timeAgo = (date) => {
 
 export default function Dashboard() {
   const { total, pinned, tagsCount } = useAppStore(state => state.stats());
-  const links = useAppStore(state => state.links).slice(0, 3);
+  const links = useAppStore(state => state.links).slice(0, 4);
+  const isBackendOnline = useAppStore(state => state.isBackendOnline);
 
   return (
-    <>
-      <section className="mt-8">
+    <div className="space-y-10 page-enter">
+      {/* Hero Welcome Header */}
+      <section className="mt-4">
         <div className="flex items-start gap-4">
-          <span className="text-secondary text-3xl font-bold mt-2">&gt;</span>
+          <div className="mt-1">
+            <Icon3D name="sparkles" theme="emerald" size="md" />
+          </div>
           <div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-primary uppercase leading-tight">
-              Hey dev, ready to organize your links?<span className="cursor-blink"></span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-mono text-[10px] tracking-widest text-[#006d41] uppercase font-bold bg-[#00f99b]/20 px-2 py-0.5 rounded border border-[#006d41]/30">
+                SYSTEM OPERATIONAL
+              </span>
+              <span className="text-[10px] text-primary/50 font-mono hidden sm:inline">
+                NODE_ENCRYPTED_VAULT
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-primary uppercase leading-tight">
+              Ready to organize your links?<span className="cursor-blink"></span>
             </h2>
-            <p className="mt-4 text-on-surface-variant font-medium tracking-tight max-w-2xl">
-              Your personal digital common-place book. Curated, tagged, and indexed for high-performance retrieval.
+            <p className="mt-2 text-on-surface-variant font-medium tracking-tight max-w-2xl text-sm sm:text-base">
+              Your personal high-performance digital library. Curated, tagged, and indexed with instant 3D tactile access.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-3 gap-3 md:gap-8 mt-12 mb-12">
-        <div className="sticky-note bg-surface-container-highest p-3 md:p-4 border-2 border-primary flex flex-col justify-between aspect-square hover:bg-secondary-container">
+      {/* 3D Tactile Stat Cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="font-label text-[8px] md:text-[10px] font-bold tracking-widest opacity-60">RECORDS</span>
-            <span className="material-symbols-outlined text-secondary scale-75 md:scale-90">link</span>
+            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase">TOTAL RECORDS</span>
+            <Icon3D name="link" theme="emerald" size="sm" />
           </div>
           <div>
-            <p className="text-xl md:text-5xl font-black tracking-tighter leading-none">{total}</p>
-            <p className="text-[8px] md:text-[10px] font-bold mt-1 uppercase tracking-tighter">Indexed</p>
+            <p className="text-4xl sm:text-5xl font-black tracking-tight leading-none text-primary group-hover:text-secondary transition-colors">
+              {total}
+            </p>
+            <p className="text-[10px] font-bold mt-2 uppercase tracking-wider text-secondary font-mono">
+              Indexed in Vault
+            </p>
           </div>
         </div>
 
-        <div className="sticky-note bg-surface-container-highest p-3 md:p-4 border-2 border-primary flex flex-col justify-between aspect-square hover:bg-secondary-container" style={{transform: "rotate(1.2deg)"}}>
+        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="font-label text-[8px] md:text-[10px] font-bold tracking-widest opacity-60">SAVED</span>
-            <span className="material-symbols-outlined text-secondary scale-75 md:scale-90" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase">SAVED & PINNED</span>
+            <Icon3D name="star" theme="amber" size="sm" />
           </div>
           <div>
-            <p className="text-xl md:text-5xl font-black tracking-tighter leading-none">{pinned}</p>
-            <p className="text-[8px] md:text-[10px] font-bold mt-1 uppercase tracking-tighter">Pinned</p>
+            <p className="text-4xl sm:text-5xl font-black tracking-tight leading-none text-primary group-hover:text-amber-600 transition-colors">
+              {pinned}
+            </p>
+            <p className="text-[10px] font-bold mt-2 uppercase tracking-wider text-amber-600 font-mono">
+              Priority Resources
+            </p>
           </div>
         </div>
 
-        <div className="sticky-note bg-surface-container-highest p-3 md:p-4 border-2 border-primary flex flex-col justify-between aspect-square hover:bg-secondary-container" style={{transform: "rotate(-0.8deg)"}}>
+        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="font-label text-[8px] md:text-[10px] font-bold tracking-widest opacity-60">TAGS</span>
-            <span className="material-symbols-outlined text-secondary scale-75 md:scale-90">label</span>
+            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase">CATEGORIES / TAGS</span>
+            <Icon3D name="layers" theme="purple" size="sm" />
           </div>
           <div>
-            <p className="text-xl md:text-5xl font-black tracking-tighter leading-none">{tagsCount}</p>
-            <p className="text-[8px] md:text-[10px] font-bold mt-1 uppercase tracking-tighter">Unique</p>
+            <p className="text-4xl sm:text-5xl font-black tracking-tight leading-none text-primary group-hover:text-purple-600 transition-colors">
+              {tagsCount}
+            </p>
+            <p className="text-[10px] font-bold mt-2 uppercase tracking-wider text-purple-600 font-mono">
+              Unique Classifiers
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-12">
+      {/* Main Grid: Actions & Recent Activity */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-8">
+        {/* Actions Left Column */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-surface p-6 border-2 border-primary pixel-border">
-            <h3 className="text-xl font-bold mb-6 tracking-tighter uppercase border-b-2 border-dashed border-outline-variant pb-2">Actions</h3>
-            <div className="space-y-4">
-              <Link to="/links">
-                <button className="w-full bg-primary text-on-primary py-4 px-6 flex items-center justify-between group active:translate-y-0.5 duration-75">
-                  <span className="font-bold tracking-tighter uppercase">Add New Link</span>
-                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">add_circle</span>
+          <div className="card-3d p-6 rounded-2xl">
+            <h3 className="text-base font-bold mb-4 tracking-tight uppercase border-b-2 border-dashed border-[#5f5e5e]/20 pb-2 flex items-center justify-between">
+              <span>Quick Actions</span>
+              <Activity size={16} className="text-secondary" />
+            </h3>
+            
+            <div className="space-y-3">
+              <Link to="/links" className="block">
+                <button className="btn-3d w-full bg-primary text-on-primary py-3.5 px-4 rounded-xl flex items-center justify-between group font-bold tracking-tight text-xs uppercase">
+                  <span className="flex items-center gap-2">
+                    <PlusCircle size={16} className="text-[#00f99b]" />
+                    Archive New Link
+                  </span>
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </button>
               </Link>
-              <Link to="/database" className="block w-full">
-                <button className="w-full border-2 border-primary text-primary py-4 px-6 flex items-center justify-between hover:bg-surface-variant transition-colors active:translate-y-0.5 duration-75">
-                  <span className="font-bold tracking-tighter uppercase">View All Archives</span>
-                  <span className="material-symbols-outlined">database</span>
+              
+              <Link to="/database" className="block">
+                <button className="btn-3d-secondary w-full bg-[#fbf9f0] text-primary py-3.5 px-4 rounded-xl flex items-center justify-between hover:bg-[#f0eee5] transition-colors font-bold tracking-tight text-xs uppercase">
+                  <span className="flex items-center gap-2">
+                    <Database size={16} className="text-secondary" />
+                    Open Vault Archive
+                  </span>
+                  <ArrowRight size={16} />
                 </button>
               </Link>
             </div>
           </div>
-          <div className="bg-tertiary text-on-tertiary p-6 border-2 border-primary pixel-border relative overflow-hidden">
-            <div className="relative z-10">
-              <h4 className="font-bold text-lg tracking-tighter uppercase mb-2">Sync Status</h4>
-              <p className="text-sm opacity-90 leading-snug">Everything is up to date. Local repository matches remote cloud storage.</p>
+
+          {/* Sync Status Banner */}
+          <div className="card-3d p-5 rounded-2xl bg-gradient-to-br from-[#006d41] to-[#00472a] text-white border-2 border-[#002110] relative overflow-hidden">
+            <div className="relative z-10 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={18} className="text-[#00f99b]" />
+                <h4 className="font-bold text-sm tracking-wide uppercase">Vault Status</h4>
+              </div>
+              <p className="text-xs text-white/90 leading-relaxed">
+                {isBackendOnline 
+                  ? 'All local links synchronized with secure cloud storage.' 
+                  : 'Operating in local offline cache mode. Changes will sync automatically.'}
+              </p>
             </div>
-            <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-8xl opacity-10 rotate-12">sync</span>
+            {/* Background 3D Emblem */}
+            <div className="absolute -right-3 -bottom-4 opacity-15 pointer-events-none">
+              <Icon3D name="database" theme="emerald" size="xl" />
+            </div>
           </div>
         </div>
 
+        {/* Recent Activity Right Column */}
         <div className="lg:col-span-8">
-          <div className="bg-white/40 border-2 border-primary p-6">
-            <div className="flex justify-between items-end border-b-2 border-primary pb-3 mb-2">
-              <h3 className="text-2xl font-black tracking-tighter uppercase leading-none">Recent Activity</h3>
-              <Link to="/database" className="text-tertiary text-xs font-bold underline decoration-wavy underline-offset-4 uppercase tracking-widest">Full Log</Link>
+          <div className="card-3d p-6 rounded-2xl">
+            <div className="flex justify-between items-center border-b-2 border-[#5f5e5e]/20 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-black tracking-tight uppercase">Recent Activity</h3>
+                <span className="text-[10px] font-mono bg-secondary/15 text-secondary px-2 py-0.5 rounded-full font-bold">
+                  {links.length} LATEST
+                </span>
+              </div>
+              <Link to="/database" className="text-secondary text-xs font-bold hover:underline tracking-wider uppercase font-mono flex items-center gap-1">
+                <span>View All</span>
+                <ArrowRight size={13} />
+              </Link>
             </div>
-            <div className="divide-y divide-outline-variant/30">
+
+            <div className="divide-y divide-[#5f5e5e]/15">
               {links.length === 0 ? (
-                <div className="py-4 text-center text-primary/50 text-sm italic">No recent activity detected.</div>
+                <div className="py-12 text-center text-primary/50 text-sm flex flex-col items-center gap-3">
+                  <Icon3D name="link" theme="slate" size="lg" />
+                  <p className="font-mono">No links stored yet in database vault.</p>
+                  <Link to="/links" className="text-xs font-bold text-secondary underline uppercase">
+                    Add your first link →
+                  </Link>
+                </div>
               ) : (
-                links.map((link) => (
-                  <div key={link.id} className="flex items-center gap-3 py-3 hover:bg-secondary-container/20 transition-all px-2">
-                    <div className="w-10 h-10 bg-surface-container-highest border-2 border-primary flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-primary text-xl">{getIconForCategory(link.category)}</span>
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <h4 className="font-bold tracking-tight text-primary text-sm truncate">{link.title || link.url}</h4>
-                      <div className="flex gap-3 mt-0.5 items-center">
-                        <span className="text-[9px] font-bold text-secondary uppercase tracking-tighter bg-secondary/10 px-1.5 py-0 truncate max-w-[80px] whitespace-nowrap">{link.category || 'Uncategorized'}</span>
-                        <span className="text-[9px] font-bold text-tertiary uppercase tracking-tighter truncate max-w-[150px]">{new URL(link.url).hostname.replace('www.', '')}</span>
+                links.map((link) => {
+                  const { name, theme } = getCategoryTheme(link.category);
+                  let domain = '';
+                  try {
+                    domain = new URL(link.url).hostname.replace('www.', '');
+                  } catch {
+                    domain = link.url;
+                  }
+
+                  return (
+                    <div key={link.id} className="flex items-center gap-3.5 py-3 hover:bg-[#00f99b]/10 transition-colors px-2 rounded-xl group">
+                      <Icon3D name={name} theme={theme} size="sm" />
+                      
+                      <div className="flex-grow min-w-0">
+                        <a 
+                          href={link.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="font-bold tracking-tight text-primary text-sm truncate hover:text-secondary flex items-center gap-1.5"
+                        >
+                          <span className="truncate">{link.title || link.url}</span>
+                          <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-secondary" />
+                        </a>
+                        <div className="flex gap-2 mt-1 items-center flex-wrap">
+                          <span className="text-[9px] font-bold text-secondary uppercase tracking-tight bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20 font-mono">
+                            {link.category || 'Uncategorized'}
+                          </span>
+                          <span className="text-[10px] font-medium text-primary/60 font-mono truncate max-w-[160px]">
+                            {domain}
+                          </span>
+                        </div>
                       </div>
+
+                      <span className="text-[10px] font-mono text-primary/50 shrink-0 uppercase">
+                        {timeAgo(link.date)}
+                      </span>
                     </div>
-                    <span className="text-[9px] font-bold opacity-40 uppercase shrink-0">
-                      {timeAgo(link.date)}
-                    </span>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
-

@@ -522,6 +522,7 @@ export default function HexagonBg() {
   return (
     <canvas
       ref={canvasRef}
+      className="print:hidden"
       style={{
         position: 'fixed',
         top: '-5%',

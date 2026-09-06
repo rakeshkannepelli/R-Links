@@ -1,248 +1,391 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useAppStore from '../store';
+import Icon3D, { getCategoryTheme } from '../components/Icon3D';
 import toast from 'react-hot-toast';
+import { 
+  Plus, 
+  ExternalLink, 
+  Copy, 
+  Check, 
+  Sparkles, 
+  ArrowRight, 
+  Link as LinkIcon, 
+  Type, 
+  Tag, 
+  FolderPlus,
+  Globe
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const UNIVERSAL_CATEGORIES = [
+  { id: 'AI TOOLS', label: 'AI Tools', icon: 'ai', theme: 'emerald' },
+  { id: 'WORK', label: 'Work', icon: 'work', theme: 'amber' },
+  { id: 'LEARNING', label: 'Learning', icon: 'learning', theme: 'indigo' },
+  { id: 'DESIGN', label: 'Design', icon: 'design', theme: 'purple' },
+  { id: 'DEV & TECH', label: 'Dev & Tech', icon: 'dev', theme: 'cyan' },
+  { id: 'MEDIA', label: 'Media', icon: 'media', theme: 'rose' },
+  { id: 'SHOPPING', label: 'Shopping', icon: 'shopping', theme: 'amber' },
+  { id: 'SOCIAL', label: 'Social', icon: 'social', theme: 'teal' },
+  { id: 'LIFESTYLE', label: 'Lifestyle', icon: 'lifestyle', theme: 'emerald' },
+  { id: 'PERSONAL', label: 'Personal', icon: 'personal', theme: 'slate' },
+];
 
 export default function Links() {
   const addLink = useAppStore(state => state.addLink);
   const links = useAppStore(state => state.links);
-  const recentLinks = links.slice(0, 3);
+  const recentLinks = links.slice(0, 4);
 
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
-  const [adding, setAdding] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('AI TOOLS');
   const [autoDetect, setAutoDetect] = useState(true);
-  const [selectedTag, setSelectedTag] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
-  const availableTags = ['WORK', 'STREAM', 'AI CHATBOT', 'DEV', 'SOCIAL', 'GAMING', 'EDUCATION', 'SERVICE'];
-
-  const autoCategorize = (urlStr) => {
+  // Universal Smart Auto-Categorizer
+  const detectCategory = (urlStr) => {
     try {
       const hostname = new URL(urlStr).hostname.toLowerCase();
-      
-      // DEV ecosystem
-      if (hostname.includes('github') || hostname.includes('stackoverflow') || hostname.includes('gitlab') || hostname.includes('bitbucket') || hostname.includes('vercel') || hostname.includes('npmjs')) return 'DEV';
-      
-      // STREAM & MEDIA ecosystem
-      if (hostname.includes('youtube') || hostname.includes('twitch') || hostname.includes('vimeo') || hostname.includes('netflix') || hostname.includes('spotify')) return 'STREAM';
-      
-      // AI & ML ecosystem
-      if (hostname.includes('openai') || hostname.includes('anthropic') || hostname.includes('claude') || hostname.includes('huggingface') || hostname.includes('chatgpt') || hostname.includes('midjourney')) return 'AI CHATBOT';
-      
-      // SOCIAL ecosystem
-      if (hostname.includes('twitter') || hostname.includes('bsky.app') || hostname.includes('linkedin') || hostname.includes('reddit') || hostname.includes('instagram') || hostname.includes('facebook') || hostname.includes('x.com')) return 'SOCIAL';
-      
-      // DESIGN ecosystem
-      if (hostname.includes('figma') || hostname.includes('dribbble') || hostname.includes('behance') || hostname.includes('canva') || hostname.includes('pinterest') || hostname.includes('framer') || hostname.includes('awwwards')) return 'DESIGN';
-      
-      // WORK & PRODUCTIVITY ecosystem
-      if (hostname.includes('notion') || hostname.includes('slack') || hostname.includes('trello') || hostname.includes('asana') || hostname.includes('jira') || hostname.includes('linear') || hostname.includes('google')) return 'WORK';
-      
-      // GAMING ecosystem
-      if (hostname.includes('steam') || hostname.includes('epicgames') || hostname.includes('ign') || hostname.includes('polygon') || hostname.includes('roblox')) return 'GAMING';
 
-      // EDUCATION ecosystem
-      if (hostname.includes('coursera') || hostname.includes('udemy') || hostname.includes('edx') || hostname.includes('khanacademy') || hostname.includes('mit.edu')) return 'EDUCATION';
+      // AI & Tools
+      if (hostname.includes('openai') || hostname.includes('chatgpt') || hostname.includes('claude') || hostname.includes('anthropic') || hostname.includes('huggingface') || hostname.includes('midjourney') || hostname.includes('perplexity') || hostname.includes('gemini') || hostname.includes('copilot')) {
+        return 'AI TOOLS';
+      }
+      // Dev & Tech
+      if (hostname.includes('github') || hostname.includes('gitlab') || hostname.includes('stackoverflow') || hostname.includes('npm') || hostname.includes('vercel') || hostname.includes('docker') || hostname.includes('developer') || hostname.includes('w3schools')) {
+        return 'DEV & TECH';
+      }
+      // Work & Productivity
+      if (hostname.includes('notion') || hostname.includes('slack') || hostname.includes('trello') || hostname.includes('asana') || hostname.includes('jira') || hostname.includes('linear') || hostname.includes('docs.google') || hostname.includes('figma') || hostname.includes('miro') || hostname.includes('linkedin')) {
+        return 'WORK';
+      }
+      // Learning & Study
+      if (hostname.includes('coursera') || hostname.includes('udemy') || hostname.includes('edx') || hostname.includes('wikipedia') || hostname.includes('medium') || hostname.includes('substack') || hostname.includes('khanacademy') || hostname.includes('mit.edu') || hostname.includes('arxiv')) {
+        return 'LEARNING';
+      }
+      // Design & Art
+      if (hostname.includes('dribbble') || hostname.includes('behance') || hostname.includes('pinterest') || hostname.includes('canva') || hostname.includes('artstation') || hostname.includes('unsplash') || hostname.includes('coolors')) {
+        return 'DESIGN';
+      }
+      // Media & Entertainment
+      if (hostname.includes('youtube') || hostname.includes('spotify') || hostname.includes('netflix') || hostname.includes('twitch') || hostname.includes('vimeo') || hostname.includes('soundcloud') || hostname.includes('disney') || hostname.includes('music')) {
+        return 'MEDIA';
+      }
+      // Shopping & Wishlist
+      if (hostname.includes('amazon') || hostname.includes('ebay') || hostname.includes('etsy') || hostname.includes('walmart') || hostname.includes('target') || hostname.includes('aliexpress') || hostname.includes('shop')) {
+        return 'SHOPPING';
+      }
+      // Social & Community
+      if (hostname.includes('reddit') || hostname.includes('twitter') || hostname.includes('x.com') || hostname.includes('instagram') || hostname.includes('facebook') || hostname.includes('threads') || hostname.includes('discord') || hostname.includes('tiktok')) {
+        return 'SOCIAL';
+      }
+      // Lifestyle & Travel
+      if (hostname.includes('booking') || hostname.includes('airbnb') || hostname.includes('tripadvisor') || hostname.includes('allrecipes') || hostname.includes('maps.google') || hostname.includes('uber') || hostname.includes('health')) {
+        return 'LIFESTYLE';
+      }
 
-      // SERVICE ecosystem
-      if (hostname.includes('aws') || hostname.includes('azure') || hostname.includes('cloudflare') || hostname.includes('digitalocean') || hostname.includes('stripe')) return 'SERVICE';
-
-      // Fallback for unrecognized domains
-      return 'WORK';
+      return 'PERSONAL';
     } catch {
-      return 'WORK';
+      return 'PERSONAL';
     }
   };
 
-  const handleAdd = (e) => {
+  // Auto-detect category whenever URL changes
+  useEffect(() => {
+    if (autoDetect && url.trim().length > 6) {
+      const detected = detectCategory(url);
+      setSelectedCategory(detected);
+    }
+  }, [url, autoDetect]);
+
+  const handleUrlChange = (val) => {
+    setUrl(val);
+    if (!title) {
+      try {
+        const u = new URL(val);
+        const host = u.hostname.replace('www.', '');
+        const path = u.pathname.split('/').filter(Boolean)[0] || '';
+        const derived = host + (path ? ` / ${path}` : '');
+        setTitle(derived);
+      } catch {
+        // typing incomplete URL
+      }
+    }
+  };
+
+  const handleAdd = async (e) => {
     e.preventDefault();
-    if (!url.startsWith('http')) {
-      toast.error('Valid URL required');
+    let cleanedUrl = url.trim();
+    if (!cleanedUrl.startsWith('http://') && !cleanedUrl.startsWith('https://')) {
+      cleanedUrl = `https://${cleanedUrl}`;
+    }
+
+    try {
+      new URL(cleanedUrl);
+    } catch {
+      toast.error('Please enter a valid website URL');
       return;
     }
 
     setAdding(true);
-    setTimeout(() => {
-      const category = autoDetect ? autoCategorize(url) : selectedTag || 'WORK';
-      addLink({
-        url,
-        title: title || `${new URL(url).hostname}`,
-        category,
-        tags: [category.toLowerCase(), 'curated']
+    try {
+      let finalTitle = title.trim();
+      if (!finalTitle) {
+        try {
+          finalTitle = new URL(cleanedUrl).hostname.replace('www.', '');
+        } catch {
+          finalTitle = 'Saved Resource';
+        }
+      }
+
+      await addLink({
+        url: cleanedUrl,
+        title: finalTitle,
+        category: selectedCategory,
+        tags: [selectedCategory.toLowerCase()],
+        date: new Date().toISOString(),
+        pinned: false
       });
+
       setUrl('');
       setTitle('');
-      setSelectedTag('');
+      toast.success('Link successfully archived in Vault');
+    } catch (err) {
+      toast.error('Failed to save link');
+    } finally {
       setAdding(false);
-      toast.success('Resource saved to database');
-    }, 800);
+    }
+  };
+
+  const handleCopy = (id, urlToCopy) => {
+    navigator.clipboard.writeText(urlToCopy);
+    setCopiedId(id);
+    toast.success('Copied link');
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
-    <div className="mt-8 max-w-2xl mx-auto space-y-8 pb-16 relative">
-      <header className="mb-12">
-        <span className="text-[10px] font-bold tracking-[0.2em] uppercase bg-primary text-on-primary px-2 py-1 inline-block mb-4 shadow-[2px_2px_0px_#fbf9f0]">SESSION_ACTIVE: {new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }).replace(/\//g, '.')}</span>
-        <h1 className="text-4xl md:text-5xl font-black uppercase text-primary tracking-tighter leading-none mb-4">CURATED_RESOURCES</h1>
-        <p className="text-sm border-l-0 md:border-l-4 border-secondary pl-0 md:pl-3 text-on-surface-variant font-medium tracking-tight">
-          A tactile digital manuscript for link archival. Every entry is preserved with metadata and automated categorization.
+    <div className="max-w-4xl mx-auto space-y-10 page-enter pb-16">
+      {/* Header */}
+      <header className="mt-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="font-mono text-[10px] tracking-widest text-secondary font-bold uppercase bg-secondary/10 px-2.5 py-0.5 rounded border border-secondary/20">
+            INGESTION TERMINAL
+          </span>
+          <span className="text-[10px] font-mono text-primary/50 uppercase">
+            ANY LINK // ONE-CLICK ORGANIZED
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-5xl font-black uppercase text-primary tracking-tight leading-none mb-3">
+          Add Resource Link
+        </h1>
+        <p className="text-xs sm:text-sm text-primary/70 font-medium max-w-xl leading-relaxed">
+          Store any link in seconds. Select a category or let smart detection classify it automatically into your personal 3D vault.
         </p>
       </header>
 
-      {/* ADD NEW RESOURCE Form */}
-      <section className="bg-surface-container p-6 md:p-8 border-2 border-primary/20 sticky-note relative -ml-2 -mr-2 md:mx-0 shadow-[8px_8px_0px_#5f5e5e] mb-12">
-        <div className="absolute right-6 top-6 grid grid-cols-3 gap-1 opacity-20 hidden sm:grid">
-          {[...Array(9)].map((_, i) => (
-            <div key={i} className="w-1.5 h-1.5 bg-primary"></div>
-          ))}
-        </div>
-        <h2 className="text-[10px] font-black uppercase tracking-widest flex items-center text-secondary mb-6 relative z-10">
-          ADD NEW RESOURCE
-        </h2>
-
-        <form onSubmit={handleAdd} className="space-y-8 relative z-10">
-          <div className="flex bg-transparent border-b-2 border-primary pb-2 items-end">
-            <span className="text-secondary font-black text-xl mr-3 mb-1">&gt;</span>
-            <input
-              required
-              type="url"
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-              placeholder="paste your link here."
-              className="w-full bg-transparent outline-none font-bold text-lg md:text-2xl placeholder:text-primary/30 tracking-tight text-primary placeholder:font-black pb-1"
-            />
+      {/* 3D Modern Input Deck */}
+      <section className="card-3d p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-[#fbf9f0]">
+        <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#5f5e5e]/20">
+          <div className="flex items-center gap-2 text-secondary font-mono text-xs font-black uppercase tracking-wider">
+            <FolderPlus size={16} />
+            <span>LINK SPECIFICATIONS</span>
           </div>
 
-          <div className="flex flex-col gap-6 w-full max-w-xs md:max-w-[200px] ml-auto pb-4 border-b border-primary/10">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-bold uppercase text-primary/60">
+              SMART DETECT:
+            </span>
+            <button
+              type="button"
+              onClick={() => setAutoDetect(!autoDetect)}
+              className={`px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase transition-all ${
+                autoDetect
+                  ? 'bg-secondary text-white shadow-sm'
+                  : 'bg-[#f0eee5] text-primary/60 hover:text-primary'
+              }`}
+            >
+              {autoDetect ? 'ACTIVE' : 'MANUAL'}
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleAdd} className="space-y-6">
+          {/* URL Input */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
+              <LinkIcon size={14} className="text-secondary" />
+              <span>Website URL</span>
+              <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center bg-[#f0eee5] border-2 border-[#5f5e5e]/25 rounded-2xl px-4 py-3 focus-within:border-secondary transition-all shadow-inner">
+              <Globe size={18} className="text-primary/40 mr-3 shrink-0" />
+              <input
+                required
+                type="text"
+                value={url}
+                onChange={e => handleUrlChange(e.target.value)}
+                placeholder="https://example.com/article, product, or tool"
+                className="w-full bg-transparent outline-none font-bold text-sm sm:text-base text-primary placeholder:text-primary/30"
+              />
+            </div>
+          </div>
+
+          {/* Title Input */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
+              <Type size={14} className="text-secondary" />
+              <span>Display Title (Optional)</span>
+            </label>
+            <div className="flex items-center bg-[#f0eee5] border-2 border-[#5f5e5e]/25 rounded-2xl px-4 py-2.5 focus-within:border-secondary transition-all shadow-inner">
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Leave blank to auto-use website name"
+                className="w-full bg-transparent outline-none font-bold text-sm text-primary placeholder:text-primary/30"
+              />
+            </div>
+          </div>
+
+          {/* Clean 3D Category Selector Chips */}
+          <div className="space-y-3 pt-2">
+            <div className="flex justify-between items-center">
+              <label className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
+                <Tag size={14} className="text-secondary" />
+                <span>Select Category</span>
+              </label>
+              {autoDetect && (
+                <span className="text-[10px] font-mono font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">
+                  AUTO SELECTED: {selectedCategory}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+              {UNIVERSAL_CATEGORIES.map(cat => {
+                const isSelected = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      setAutoDetect(false);
+                      setSelectedCategory(cat.id);
+                    }}
+                    className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition-all text-left ${
+                      isSelected
+                        ? 'bg-[#00f99b] text-[#006d41] border-[#006d41] shadow-[3px_3px_0_#006d41] -translate-y-0.5'
+                        : 'bg-[#f0eee5] border-[#5f5e5e]/20 text-primary/80 hover:bg-[#e4e3da] hover:border-[#5f5e5e]/40'
+                    }`}
+                  >
+                    <Icon3D name={cat.icon} theme={cat.theme} size="xs" />
+                    <span className="text-[11px] font-bold tracking-tight uppercase truncate font-mono">
+                      {cat.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Submit Action */}
+          <div className="pt-4 flex justify-end">
             <button
               disabled={adding}
               type="submit"
-              className="w-full bg-primary text-on-primary font-bold uppercase tracking-widest py-3 flex items-center justify-center gap-2 hover:bg-surface-variant hover:text-primary border-2 border-primary transition-all shadow-[4px_4px_0px_0px_rgba(95,94,94,0.4)] active:shadow-none active:translate-y-1"
+              className="btn-3d w-full sm:w-auto bg-primary text-on-primary font-bold uppercase tracking-wider py-3.5 px-8 rounded-xl flex items-center justify-center gap-3 text-sm disabled:opacity-50"
             >
-              <span className="relative z-10">{adding ? 'PROCESSING...' : 'SAVE >'}</span>
+              {adding ? (
+                <>
+                  <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                  <span>SAVING TO VAULT...</span>
+                </>
+              ) : (
+                <>
+                  <Plus size={18} className="text-[#00f99b]" />
+                  <span>ARCHIVE LINK →</span>
+                </>
+              )}
             </button>
-          </div>
-
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-6">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60">AUTO-DETECT</span>
-              <button type="button" onClick={() => setAutoDetect(!autoDetect)} className={`w-12 h-6 border-2 border-primary flex items-center p-0.5 transition-colors ${autoDetect ? 'bg-secondary-container' : 'bg-surface'}`}>
-                <div className={`w-4 h-4 border border-primary transition-transform ${autoDetect ? 'bg-surface translate-x-[20px]' : 'bg-primary translate-x-0'}`}></div>
-              </button>
-            </div>
-
-            <div className={`transition-all duration-300 ${autoDetect ? 'opacity-40 grayscale' : 'opacity-100'}`}>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 block mb-4">MANUAL OVERRIDE:</span>
-
-              <div className="flex bg-transparent border-b border-primary pb-2 items-center mb-6 max-w-xs">
-                <span className="text-secondary font-bold mr-3 text-sm">&gt;</span>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  placeholder="RESOURCE_NAME"
-                  className="w-full bg-transparent outline-none font-bold text-xs placeholder:text-primary/30 uppercase tracking-widest"
-                  disabled={autoDetect}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {availableTags.map(tag => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => { if (!autoDetect) setSelectedTag(tag); }}
-                    disabled={autoDetect}
-                    className={`px-3 py-1.5 text-[9px] font-bold uppercase border-2 transition-all ${selectedTag === tag ? 'bg-primary border-primary text-surface' : 'bg-surface border-primary text-primary hover:bg-primary/5'}`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </form>
       </section>
 
-      {/* Link Cards Feed */}
-      <div className="space-y-6 md:space-y-10 mt-8 relative z-10">
-        {recentLinks.map((link, i) => {
-          // Replicate exactly: Title, desc, then link
+      {/* Recently Archived Resources Preview */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-base font-black uppercase tracking-tight text-primary flex items-center gap-2">
+            <span>Recently Added Entries</span>
+            <span className="text-xs font-mono text-primary/50 font-normal">({recentLinks.length})</span>
+          </h3>
+          <Link to="/database" className="text-secondary text-xs font-mono font-bold uppercase tracking-wider hover:underline flex items-center gap-1">
+            <span>View Full Database</span>
+            <ArrowRight size={13} />
+          </Link>
+        </div>
 
-          // Randomly rotate to feel analogue
-          const rotClass = i % 2 === 0 ? '-rotate-[0.5deg]' : 'rotate-[0.5deg]';
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {recentLinks.map((link) => {
+            const { name, theme, label } = getCategoryTheme(link.category);
+            let domain = '';
+            try {
+              domain = new URL(link.url).hostname.replace('www.', '');
+            } catch {
+              domain = link.url;
+            }
 
-          let badgeColor = 'bg-primary text-on-primary';
-          if (link.category === 'DEV') badgeColor = 'bg-[#006d41] text-white';
-          else if (link.category === 'STREAM') badgeColor = 'bg-[#5f5e5e] text-white';
-          else if (link.category === 'AI CHATBOT') badgeColor = 'bg-[#015dce] text-white';
-          else if (link.category === 'WORK') badgeColor = 'bg-[#00f99b] text-[#1b1c17] font-black';
-          else if (link.category === 'SOCIAL') badgeColor = 'bg-[#c8c6c5] text-[#1b1c17]';
-          else if (link.category === 'DESIGN') badgeColor = 'bg-[#00f99b] text-black font-black';
-          else if (link.category === 'GAMING') badgeColor = 'bg-[#8b5cf6] text-white';
-          else if (link.category === 'EDUCATION') badgeColor = 'bg-[#f59e0b] text-white';
-          else if (link.category === 'SERVICE') badgeColor = 'bg-[#06b6d4] text-white';
+            const isCopied = copiedId === (link.id || link._id);
 
-          let iconBgColor = 'bg-[#1b1c17] text-white';
-          if (link.category === 'AI CHATBOT') iconBgColor = 'bg-[#1b1c17] text-[#015dce]';
-          else if (link.category === 'WORK') iconBgColor = 'bg-white text-[#1b1c17]';
-          else if (link.category === 'SOCIAL') iconBgColor = 'bg-[#015dce] text-white';
-          else if (link.category === 'GAMING') iconBgColor = 'bg-[#8b5cf6] text-white';
-          else if (link.category === 'EDUCATION') iconBgColor = 'bg-[#f59e0b] text-white';
-          else if (link.category === 'SERVICE') iconBgColor = 'bg-[#06b6d4] text-white';
+            return (
+              <div key={link.id || link._id} className="card-3d p-4 rounded-2xl flex flex-col justify-between group">
+                <div>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <Icon3D name={name} theme={theme} size="sm" />
+                      <div>
+                        <span className="text-[9px] font-mono font-black uppercase tracking-wider text-secondary bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20 inline-block">
+                          {link.category || label}
+                        </span>
+                        <p className="text-[10px] font-mono text-primary/50 mt-0.5">{domain}</p>
+                      </div>
+                    </div>
 
-          // Icons map
-          let iconSymbol = 'draft';
-          if (link.category === 'DEV') iconSymbol = 'hexagon';
-          else if (link.category === 'STREAM') iconSymbol = 'chat_bubble';
-          else if (link.category === 'AI CHATBOT') iconSymbol = 'smart_toy';
-          else if (link.category === 'WORK') iconSymbol = 'work';
-          else if (link.category === 'SOCIAL') iconSymbol = 'hub';
-          else if (link.category === 'DESIGN') iconSymbol = 'palette';
-          else if (link.category === 'GAMING') iconSymbol = 'sports_esports';
-          else if (link.category === 'EDUCATION') iconSymbol = 'school';
-          else if (link.category === 'SERVICE') iconSymbol = 'build';
-
-          // Generate jagged SVG pattern path
-          const jaggedPattern = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'><polygon points='0,0 100,0 100,8 90,10 80,6 70,10 60,7 50,10 40,5 30,10 20,7 10,10 0,6' fill='#fbf9f0'/></svg>`);
-
-          return (
-            <div key={link.id} className="relative group transition-all duration-300 hover:scale-[1.01] z-10 -ml-2 -mr-2 md:mx-0">
-              <div className={`bg-surface-container p-6 md:p-8 relative ${rotClass} border-x-2 border-t-2 border-primary/10 shadow-sm`}>
-                <div className="flex justify-between items-start mb-6">
-                  <div className={`w-8 h-8 border border-primary flex items-center justify-center p-1.5 ${iconBgColor}`}>
-                    <span className="material-symbols-outlined text-sm">{iconSymbol}</span>
+                    <button
+                      onClick={() => handleCopy(link.id || link._id, link.url)}
+                      className="p-1.5 hover:bg-[#5f5e5e]/10 text-primary/60 hover:text-primary rounded-lg"
+                      title="Copy URL"
+                    >
+                      {isCopied ? <Check size={14} className="text-secondary font-bold" /> : <Copy size={14} />}
+                    </button>
                   </div>
-                  <span className={`text-[8px] md:text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 truncate max-w-[100px] md:max-w-[140px] whitespace-nowrap ${badgeColor}`}>
-                    {link.category}
-                  </span>
+
+                  <h4 className="font-bold text-sm text-primary line-clamp-2 mt-1">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-secondary">
+                      {link.title || link.url}
+                    </a>
+                  </h4>
                 </div>
 
-                <h3 className="font-bold text-lg md:text-xl leading-tight mb-3 text-primary pr-4">{link.title}</h3>
-
-                <p className="text-xs md:text-sm text-primary/60 mb-8 max-w-sm tracking-tight leading-relaxed line-clamp-2">{link.description || `Exploring the upcoming features of the next major ${link.category} resources and how it impacts standard deployments within the current ecosystem framework over multiple nodes.`}</p>
-
-                <div className="flex justify-between items-end border-t border-primary/10 pt-4 relative">
-                  <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-[11px] font-bold uppercase text-primary/40 hover:text-secondary transition-colors tracking-widest truncate max-w-[200px] sm:max-w-xs">
-                    {new URL(link.url).hostname} / {link.url.split('/').pop().substring(0, 15) || 'home'}
-                  </a>
-                  <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-primary/60 hover:text-primary">
-                    <span className="material-symbols-outlined text-lg">arrow_outward</span>
+                <div className="pt-3 mt-3 border-t border-[#5f5e5e]/15 flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-primary/40 truncate max-w-[200px]">
+                    {link.url}
+                  </span>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-3d bg-[#00f99b] text-[#006d41] font-bold text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1 uppercase"
+                  >
+                    <span>OPEN</span>
+                    <ExternalLink size={11} />
                   </a>
                 </div>
               </div>
-              {/* Ripped Bottom Edge via pseudo-element simulation */}
-              <div className={`absolute bottom-0 left-0 w-full h-4 z-20 translate-y-[90%] ${rotClass}`} style={{ backgroundImage: `url("data:image/svg+xml,${jaggedPattern}")`, backgroundRepeat: 'repeat-x', backgroundSize: '40px 10px' }}></div>
-            </div>
-          )
-        })}
-
-        {/* Placeholder dashed box at bottom */}
-        <div className="border-2 border-dashed border-secondary/40 p-8 text-center text-primary/20 uppercase font-bold text-[10px] tracking-widest flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-            <span className="material-symbols-outlined">add</span>
-          </div>
-          APPEND NEW ENTRY
+            );
+          })}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
