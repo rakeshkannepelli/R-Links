@@ -32,6 +32,10 @@ const linkSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  icon: {
+    type: String,
+    default: ''
+  },
   date: {
     type: Date,
     default: Date.now

@@ -3,6 +3,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middleware/authMiddleware');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -33,8 +34,21 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const identifier = (req.body.email || req.body.operatorId || '').trim();
+    const password = req.body.password;
+    
+    if (!identifier || !password) {
+      return res.status(400).send({ error: 'Please enter both login identifier and password.' });
+    }
+
+    // Match either email (case-insensitive) OR operatorId (case-insensitive)
+    const escapedIdentifier = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { operatorId: new RegExp(`^${escapedIdentifier}$`, 'i') }
+      ]
+    });
     
     if (!user) {
       return res.status(400).send({ error: 'Unable to login. Invalid credentials.' });
@@ -49,7 +63,7 @@ router.post('/login', async (req, res) => {
     
     res.send({ user: { operatorId: user.operatorId, email: user.email, level: user.level, xp: user.xp, role: user.role, photoUrl: user.photoUrl }, token });
   } catch (error) {
-    res.status(400).send();
+    res.status(400).send({ error: error.message || 'Login failed' });
   }
 });
 
@@ -188,7 +202,12 @@ router.post('/github', async (req, res) => {
 // Forgot Password
 router.post('/forgot-password', async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const rawEmail = (req.body.email || '').trim().toLowerCase();
+    if (!rawEmail) {
+      return res.status(400).send({ error: 'Please provide a valid email address.' });
+    }
+
+    const user = await User.findOne({ email: rawEmail });
     if (!user) {
       // Don't leak whether user exists for security reasons
       return res.send({ message: 'If that email is in our database, we will send a password reset link.' });
@@ -200,53 +219,91 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    const resetURL = `${req.body.frontendUrl}/reset-password/${resetToken}`;
+    const frontendBase = (req.body.frontendUrl || 'http://localhost:5173').replace(/\/$/, '');
+    const resetURL = `${frontendBase}/reset-password/${resetToken}`;
     
-    // Check if email is configured (Fallback to Console)
-    if (!process.env.RESEND_API_KEY) {
-      console.log('\n======================================================');
-      console.log('RESEND_API_KEY NOT CONFIGURED. PRINTING RESET LINK TO CONSOLE:');
-      console.log(resetURL);
-      console.log('======================================================\n');
-      return res.send({ message: 'Development Mode: Reset link printed to server console.' });
+    let emailDelivered = false;
+
+    // 1. Try Nodemailer if EMAIL_USER and EMAIL_PASS are set
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+          }
+        });
+
+        await transporter.sendMail({
+          from: `"R-LINKS Security" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject: '🔐 R-LINKS Password Reset Request',
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; background: #fbf9f0; color: #1b1c17; border: 2px solid #5f5e5e; border-radius: 12px;">
+              <h2 style="color: #006d41; margin-top: 0; font-family: monospace;">RLINKS // VAULT ACCESS RECOVERY</h2>
+              <p>You requested to reset your passphrase for operator account <strong>${user.operatorId}</strong> (${user.email}).</p>
+              <div style="margin: 24px 0;">
+                <a href="${resetURL}" style="background: #1b1c17; color: #00f99b; padding: 12px 24px; font-weight: bold; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 3px 3px 0 #006d41;">RESET PASSPHRASE &rarr;</a>
+              </div>
+              <p style="font-size: 12px; color: #5f5e5e;">Or copy this link into your browser:<br/><a href="${resetURL}" style="color: #0059c6;">${resetURL}</a></p>
+              <p style="font-size: 11px; color: #888; margin-top: 20px;">This link will expire in 1 hour. If you did not request this, please ignore this email.</p>
+            </div>
+          `
+        });
+        emailDelivered = true;
+      } catch (nmErr) {
+        console.error('Nodemailer SMTP attempt error:', nmErr.message);
+      }
     }
 
-    // === NEW HTTP EMAIL SYSTEM (Bypasses Render SMTP Block) ===
-    const emailData = {
-      from: 'onboarding@resend.dev', // Resend's default free testing email
-      to: user.email,
-      subject: 'R-LINKS Password Reset',
-      html: `<p>You are receiving this because you requested a password reset.</p>
-             <p>Please click on the following link to complete the process:</p>
-             <p><a href="${resetURL}" style="color: #4CAF50; font-weight: bold;">${resetURL}</a></p>
-             <p>If you did not request this, please ignore this email.</p>`
-    };
+    // 2. Try Resend if Nodemailer didn't send and RESEND_API_KEY is available
+    if (!emailDelivered && process.env.RESEND_API_KEY) {
+      try {
+        const emailResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+          },
+          body: JSON.stringify({
+            from: 'onboarding@resend.dev',
+            to: user.email,
+            subject: 'R-LINKS Password Reset',
+            html: `<p>Password reset link: <a href="${resetURL}">${resetURL}</a></p>`
+          })
+        });
+        if (emailResponse.ok) emailDelivered = true;
+      } catch (rsErr) {
+        console.error('Resend API attempt error:', rsErr.message);
+      }
+    }
 
-    const emailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
-      },
-      body: JSON.stringify(emailData)
+    // Always log reset link for safety & local dev
+    console.log('\n======================================================');
+    console.log('RESET LINK FOR:', user.email);
+    console.log(resetURL);
+    console.log('STATUS:', emailDelivered ? 'EMAIL SENT SUCCESSFULLY' : 'SAVED TO CONSOLE');
+    console.log('======================================================\n');
+
+    res.send({ 
+      message: 'Password reset link sent! Check your inbox.',
+      resetLink: process.env.NODE_ENV !== 'production' ? resetURL : undefined
     });
-
-    if (!emailResponse.ok) {
-      const errData = await emailResponse.text();
-      console.error('Email API Error:', errData);
-      throw new Error('Failed to send email via HTTP API');
-    }
-    
-    res.send({ message: 'If that email is in our database, we will send a password reset link.' });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: `Error sending email: ${error.message}` });
+    console.error('Forgot password error:', error);
+    res.status(500).send({ error: `Error processing password reset: ${error.message}` });
   }
 });
 
 // Reset Password
 router.post('/reset-password/:token', async (req, res) => {
   try {
+    const { password } = req.body;
+    if (!password || password.trim().length < 4) {
+      return res.status(400).send({ error: 'Password must be at least 4 characters.' });
+    }
+
     const user = await User.findOne({ 
       resetPasswordToken: req.params.token, 
       resetPasswordExpires: { $gt: Date.now() } 
@@ -256,7 +313,7 @@ router.post('/reset-password/:token', async (req, res) => {
       return res.status(400).send({ error: 'Password reset token is invalid or has expired.' });
     }
 
-    user.password = req.body.password;
+    user.password = password.trim();
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     

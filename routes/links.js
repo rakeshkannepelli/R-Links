@@ -17,7 +17,16 @@ router.get('/', authMiddleware, async (req, res) => {
 // POST a new link
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    req.user.links.push(req.body);
+    const linkData = { ...req.body };
+    if (!linkData.icon && linkData.url) {
+      try {
+        const domain = new URL(linkData.url).hostname.replace('www.', '');
+        linkData.icon = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+      } catch {
+        linkData.icon = '';
+      }
+    }
+    req.user.links.push(linkData);
     await req.user.save();
     
     // Get the newly added link
@@ -31,7 +40,7 @@ router.post('/', authMiddleware, async (req, res) => {
 // PATCH (update) a link
 router.patch('/:id', authMiddleware, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ['title', 'url', 'category', 'description', 'tags', 'pinned'];
+  const allowedUpdates = ['title', 'url', 'category', 'description', 'tags', 'pinned', 'icon'];
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
   if (!isValidOperation) {
