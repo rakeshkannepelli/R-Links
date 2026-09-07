@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import useAppStore from '../store';
-import Icon3D, { getCategoryTheme } from '../components/Icon3D';
+import Icon3D, { getCategoryTheme, getCategoryStyle } from '../components/Icon3D';
 import WebsiteIcon from '../components/WebsiteIcon';
 import SkeletonCard from '../components/SkeletonCard';
 import toast from 'react-hot-toast';
@@ -229,6 +229,7 @@ export default function Database() {
           {availableCategories.map(cat => {
             const count = categoryCounts[cat] || 0;
             const isSelected = filterCategory === cat;
+            const catStyle = getCategoryStyle(cat);
             return (
               <button
                 key={cat}
@@ -238,12 +239,12 @@ export default function Database() {
                 }}
                 className={`px-3 py-1 rounded-xl text-[10px] sm:text-xs font-bold font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 ${
                   isSelected
-                    ? 'bg-[#00f99b] text-[#006d41] border-2 border-[#006d41] shadow-[2px_2px_0_#006d41] -translate-y-0.5'
+                    ? `${catStyle.activeTab} -translate-y-0.5`
                     : 'bg-[#f0eee5] text-primary/70 border border-[#5f5e5e]/20 hover:bg-[#e4e3da] hover:text-primary'
                 }`}
               >
                 <span>{cat}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${isSelected ? 'bg-[#006d41]/15 text-[#006d41]' : 'bg-[#5f5e5e]/15 text-primary/60'}`}>
+                <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${isSelected ? 'bg-black/20 text-white' : 'bg-[#5f5e5e]/15 text-primary/60'}`}>
                   {count}
                 </span>
               </button>
@@ -342,6 +343,7 @@ export default function Database() {
             }
 
             const isCopied = copiedId === (link.id || link._id);
+            const catStyle = getCategoryStyle(link.category);
 
             return (
               <div 
@@ -353,8 +355,8 @@ export default function Database() {
                   <div className="flex items-center gap-3 min-w-0">
                     <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="md" />
                     <div className="min-w-0">
-                      <span className="text-[9px] font-mono font-black uppercase tracking-wider text-secondary bg-secondary/10 px-2 py-0.5 rounded-md border border-secondary/20 inline-block truncate">
-                        {link.category || 'UNCATEGORIZED'}
+                      <span className={`text-[9px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded-md border inline-block truncate ${catStyle.badge}`}>
+                        {link.category || catStyle.label}
                       </span>
                       <p className="text-[10px] font-mono text-primary/60 truncate mt-0.5">
                         {domain}
@@ -440,6 +442,7 @@ export default function Database() {
         <div className="card-3d rounded-2xl overflow-hidden divide-y divide-[#5f5e5e]/15">
           {paginatedLinks.map((link) => {
             const { name, theme } = getCategoryTheme(link.category);
+            const catStyle = getCategoryStyle(link.category);
             const isCopied = copiedId === (link.id || link._id);
             return (
               <div 
@@ -450,8 +453,8 @@ export default function Database() {
                   <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[9px] font-mono font-bold uppercase text-secondary bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/20">
-                        {link.category || 'UNCATEGORIZED'}
+                      <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded border ${catStyle.badge}`}>
+                        {link.category || catStyle.label}
                       </span>
                       {link.pinned && (
                         <span className="text-[9px] font-mono font-bold uppercase text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-1">

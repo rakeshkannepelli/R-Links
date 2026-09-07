@@ -194,16 +194,120 @@ export default function Icon3D({
 export function getCategoryTheme(category) {
   const cat = (category || '').toUpperCase().trim();
   
-  if (cat.includes('AI') || cat.includes('BOT')) return { name: 'ai', theme: 'emerald', label: 'AI TOOLS' };
-  if (cat.includes('WORK') || cat.includes('BUSINESS')) return { name: 'work', theme: 'amber', label: 'WORK' };
+  if (cat.includes('AI') || cat.includes('BOT')) return { name: 'ai', theme: 'purple', label: 'AI TOOLS' };
+  if (cat.includes('WORK') || cat.includes('BUSINESS')) return { name: 'work', theme: 'cyan', label: 'WORK' };
   if (cat.includes('LEARN') || cat.includes('STUDY') || cat.includes('EDU')) return { name: 'learning', theme: 'indigo', label: 'LEARNING' };
-  if (cat.includes('DESIGN') || cat.includes('ART')) return { name: 'design', theme: 'purple', label: 'DESIGN' };
-  if (cat.includes('DEV') || cat.includes('TECH') || cat.includes('CODE')) return { name: 'dev', theme: 'cyan', label: 'DEV & TECH' };
+  if (cat.includes('DESIGN') || cat.includes('ART')) return { name: 'design', theme: 'rose', label: 'DESIGN' };
+  if (cat.includes('DEV') || cat.includes('TECH') || cat.includes('CODE')) return { name: 'dev', theme: 'emerald', label: 'DEV & TECH' };
   if (cat.includes('MEDIA') || cat.includes('STREAM') || cat.includes('VIDEO')) return { name: 'media', theme: 'rose', label: 'MEDIA' };
   if (cat.includes('SHOP')) return { name: 'shopping', theme: 'amber', label: 'SHOPPING' };
   if (cat.includes('SOCIAL') || cat.includes('COMMUNITY')) return { name: 'social', theme: 'teal', label: 'SOCIAL' };
-  if (cat.includes('LIFE') || cat.includes('TRAVEL')) return { name: 'lifestyle', theme: 'emerald', label: 'LIFESTYLE' };
+  if (cat.includes('LIFE') || cat.includes('TRAVEL')) return { name: 'lifestyle', theme: 'cyan', label: 'LIFESTYLE' };
   if (cat.includes('PERSON') || cat.includes('FINANCE')) return { name: 'personal', theme: 'slate', label: 'PERSONAL' };
   
-  return { name: 'curated', theme: 'emerald', label: 'PERSONAL' };
+  return { name: 'curated', theme: 'emerald', label: cat || 'PERSONAL' };
+}
+
+// Full palette color token map for vibrant category distinction
+export function getCategoryStyle(category) {
+  const cat = (category || '').toUpperCase().trim();
+  
+  if (cat.includes('AI') || cat.includes('BOT')) {
+    return {
+      label: 'AI TOOLS',
+      badge: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
+      activeTab: 'bg-purple-600 text-white border-purple-700 shadow-[3px_3px_0_#581c87]',
+      border: 'border-purple-500/30',
+      theme: 'purple',
+      dot: 'bg-purple-500'
+    };
+  }
+  if (cat.includes('WORK') || cat.includes('BUSINESS')) {
+    return {
+      label: 'WORK',
+      badge: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
+      activeTab: 'bg-blue-600 text-white border-blue-700 shadow-[3px_3px_0_#1e3a8a]',
+      border: 'border-blue-500/30',
+      theme: 'cyan',
+      dot: 'bg-blue-500'
+    };
+  }
+  if (cat.includes('LEARN') || cat.includes('STUDY') || cat.includes('EDU')) {
+    return {
+      label: 'LEARNING',
+      badge: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
+      activeTab: 'bg-indigo-600 text-white border-indigo-700 shadow-[3px_3px_0_#312e81]',
+      border: 'border-indigo-500/30',
+      theme: 'indigo',
+      dot: 'bg-indigo-500'
+    };
+  }
+  if (cat.includes('DESIGN') || cat.includes('ART')) {
+    return {
+      label: 'DESIGN',
+      badge: 'bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30',
+      activeTab: 'bg-pink-500 text-white border-pink-600 shadow-[3px_3px_0_#831843]',
+      border: 'border-pink-500/30',
+      theme: 'rose',
+      dot: 'bg-pink-500'
+    };
+  }
+  if (cat.includes('DEV') || cat.includes('TECH') || cat.includes('CODE')) {
+    return {
+      label: 'DEV & TECH',
+      badge: 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30',
+      activeTab: 'bg-[#00f99b] text-[#006d41] border-[#006d41] shadow-[3px_3px_0_#006d41]',
+      border: 'border-emerald-500/30',
+      theme: 'emerald',
+      dot: 'bg-emerald-500'
+    };
+  }
+  if (cat.includes('MEDIA') || cat.includes('STREAM') || cat.includes('VIDEO')) {
+    return {
+      label: 'MEDIA',
+      badge: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
+      activeTab: 'bg-rose-600 text-white border-rose-700 shadow-[3px_3px_0_#881337]',
+      border: 'border-rose-500/30',
+      theme: 'rose',
+      dot: 'bg-rose-500'
+    };
+  }
+  if (cat.includes('SHOP')) {
+    return {
+      label: 'SHOPPING',
+      badge: 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30',
+      activeTab: 'bg-amber-500 text-amber-950 border-amber-600 shadow-[3px_3px_0_#78350f]',
+      border: 'border-amber-500/30',
+      theme: 'amber',
+      dot: 'bg-amber-500'
+    };
+  }
+  if (cat.includes('SOCIAL') || cat.includes('COMMUNITY')) {
+    return {
+      label: 'SOCIAL',
+      badge: 'bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30',
+      activeTab: 'bg-teal-500 text-white border-teal-600 shadow-[3px_3px_0_#134e4a]',
+      border: 'border-teal-500/30',
+      theme: 'teal',
+      dot: 'bg-teal-500'
+    };
+  }
+  if (cat.includes('LIFE') || cat.includes('TRAVEL')) {
+    return {
+      label: 'LIFESTYLE',
+      badge: 'bg-cyan-500/15 text-cyan-800 dark:text-cyan-300 border-cyan-500/30',
+      activeTab: 'bg-cyan-500 text-white border-cyan-600 shadow-[3px_3px_0_#155e75]',
+      border: 'border-cyan-500/30',
+      theme: 'cyan',
+      dot: 'bg-cyan-500'
+    };
+  }
+  return {
+    label: cat || 'PERSONAL',
+    badge: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30',
+    activeTab: 'bg-slate-700 text-white border-slate-800 shadow-[3px_3px_0_#1e293b]',
+    border: 'border-slate-500/30',
+    theme: 'slate',
+    dot: 'bg-slate-500'
+  };
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import useAppStore from '../store';
-import Icon3D, { getCategoryTheme } from '../components/Icon3D';
+import Icon3D, { getCategoryTheme, getCategoryStyle } from '../components/Icon3D';
 import WebsiteIcon from '../components/WebsiteIcon';
 import toast from 'react-hot-toast';
 import { 
@@ -14,7 +14,9 @@ import {
   Type, 
   Tag, 
   FolderPlus,
-  Globe
+  Globe,
+  Clipboard,
+  X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -111,6 +113,18 @@ export default function Links() {
       } catch {
         // typing incomplete URL
       }
+    }
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        handleUrlChange(text.trim());
+        toast.success('Pasted URL from clipboard');
+      }
+    } catch {
+      toast.error('Please paste manually using Ctrl+V');
     }
   };
 
@@ -222,7 +236,7 @@ export default function Links() {
         </div>
 
         <form onSubmit={handleAdd} className="space-y-6">
-          {/* URL Input with Live Website Icon Detection */}
+          {/* URL Input with Live Website Icon Detection & Quick Paste */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label htmlFor="url-input" className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
@@ -230,20 +244,32 @@ export default function Links() {
                 <span>Website URL</span>
                 <span className="text-red-500">*</span>
               </label>
-              {url.trim() && (
-                <span className="text-[10px] font-mono font-bold text-secondary flex items-center gap-1.5">
-                  <span>LIVE ICON DETECTED</span>
+              {url.trim() ? (
+                <span className="text-[10px] font-mono font-bold text-secondary flex items-center gap-1.5 bg-secondary/10 px-2 py-0.5 rounded-full border border-secondary/20">
+                  <span>LIVE ICON ACTIVE</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping" />
                 </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePaste}
+                  className="text-[10px] font-mono font-bold text-primary/70 hover:text-secondary flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  <Clipboard size={12} />
+                  <span>PASTE CLIPBOARD</span>
+                </button>
               )}
             </div>
-            <div className="flex items-center bg-[#f0eee5] border-2 border-[#5f5e5e]/25 rounded-2xl px-4 py-2.5 focus-within:border-secondary transition-all shadow-inner">
+
+            <div className="flex items-center bg-white border-2 border-[#5f5e5e]/30 rounded-2xl px-4 py-3 focus-within:border-secondary focus-within:shadow-[0_0_0_4px_rgba(0,249,155,0.15)] transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.04)]">
               {url.trim() ? (
                 <div className="mr-3 shrink-0">
                   <WebsiteIcon url={url} category={selectedCategory} size="sm" />
                 </div>
               ) : (
-                <Globe size={18} className="text-primary/40 mr-3 shrink-0" />
+                <div className="w-8 h-8 rounded-xl bg-[#f0eee5] flex items-center justify-center mr-3 shrink-0 text-primary/50">
+                  <Globe size={18} />
+                </div>
               )}
               <input
                 id="url-input"
@@ -251,36 +277,63 @@ export default function Links() {
                 type="text"
                 value={url}
                 onChange={e => handleUrlChange(e.target.value)}
-                placeholder="https://example.com/article, product, or tool"
+                placeholder="https://example.com/article, github repo, or tool..."
                 className="w-full bg-transparent outline-none font-bold text-sm sm:text-base text-primary placeholder:text-primary/30"
               />
+              {url.trim() && (
+                <button
+                  type="button"
+                  onClick={() => { setUrl(''); setTitle(''); }}
+                  className="p-1.5 text-primary/40 hover:text-primary hover:bg-[#f0eee5] rounded-lg transition-colors ml-2 shrink-0"
+                  title="Clear input"
+                >
+                  <X size={15} />
+                </button>
+              )}
             </div>
           </div>
 
           {/* Title Input */}
           <div className="space-y-2">
-            <label htmlFor="title-input" className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
-              <Type size={14} className="text-secondary" />
-              <span>Display Title (Optional)</span>
-            </label>
-            <div className="flex items-center bg-[#f0eee5] border-2 border-[#5f5e5e]/25 rounded-2xl px-4 py-2.5 focus-within:border-secondary transition-all shadow-inner">
+            <div className="flex justify-between items-center">
+              <label htmlFor="title-input" className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
+                <Type size={14} className="text-secondary" />
+                <span>Display Title (Optional)</span>
+              </label>
+              <span className="text-[10px] font-mono text-primary/50">AUTO-DERIVED IF BLANK</span>
+            </div>
+
+            <div className="flex items-center bg-white border-2 border-[#5f5e5e]/30 rounded-2xl px-4 py-3 focus-within:border-secondary focus-within:shadow-[0_0_0_4px_rgba(0,249,155,0.15)] transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.04)]">
+              <div className="w-8 h-8 rounded-xl bg-[#f0eee5] flex items-center justify-center mr-3 shrink-0 text-primary/50">
+                <Type size={16} />
+              </div>
               <input
                 id="title-input"
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="Leave blank to auto-use website name"
+                placeholder="e.g. My Favorite Design Tool (or auto-use site name)"
                 className="w-full bg-transparent outline-none font-bold text-sm text-primary placeholder:text-primary/30"
               />
+              {title.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setTitle('')}
+                  className="p-1.5 text-primary/40 hover:text-primary hover:bg-[#f0eee5] rounded-lg transition-colors ml-2 shrink-0"
+                  title="Clear title"
+                >
+                  <X size={15} />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Clean 3D Category Selector Chips */}
+          {/* Clean 3D Category Selector Chips with Individual Category Colors */}
           <div className="space-y-3 pt-2">
             <div className="flex justify-between items-center">
               <label className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
                 <Tag size={14} className="text-secondary" />
-                <span>Select Category</span>
+                <span>Select Category Color</span>
               </label>
               {autoDetect && (
                 <span className="text-[10px] font-mono font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">
@@ -292,6 +345,7 @@ export default function Links() {
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
               {UNIVERSAL_CATEGORIES.map(cat => {
                 const isSelected = selectedCategory === cat.id;
+                const catStyle = getCategoryStyle(cat.id);
                 return (
                   <button
                     key={cat.id}
@@ -300,16 +354,14 @@ export default function Links() {
                       setAutoDetect(false);
                       setSelectedCategory(cat.id);
                     }}
-                    className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition-all text-left ${
+                    className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition-all text-left font-mono text-[11px] font-bold uppercase truncate ${
                       isSelected
-                        ? 'bg-[#00f99b] text-[#006d41] border-[#006d41] shadow-[3px_3px_0_#006d41] -translate-y-0.5'
-                        : 'bg-[#f0eee5] border-[#5f5e5e]/20 text-primary/80 hover:bg-[#e4e3da] hover:border-[#5f5e5e]/40'
+                        ? `${catStyle.activeTab} -translate-y-0.5`
+                        : `bg-[#f0eee5] border-[#5f5e5e]/20 text-primary/80 hover:bg-[#e4e3da] hover:border-[#5f5e5e]/40`
                     }`}
                   >
-                    <Icon3D name={cat.icon} theme={cat.theme} size="xs" />
-                    <span className="text-[11px] font-bold tracking-tight uppercase truncate font-mono">
-                      {cat.label}
-                    </span>
+                    <Icon3D name={cat.icon} theme={catStyle.theme} size="xs" />
+                    <span className="truncate">{cat.label}</span>
                   </button>
                 );
               })}
@@ -339,7 +391,7 @@ export default function Links() {
         </form>
       </section>
 
-      {/* Recently Archived Resources Preview */}
+      {/* Recently Archived Resources Preview with Vibrant Category Badges */}
       <section className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-base font-black uppercase tracking-tight text-primary flex items-center gap-2">
@@ -354,7 +406,7 @@ export default function Links() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {recentLinks.map((link) => {
-            const { label } = getCategoryTheme(link.category);
+            const catStyle = getCategoryStyle(link.category);
             let domain = '';
             try {
               domain = new URL(link.url).hostname.replace('www.', '');
@@ -365,14 +417,14 @@ export default function Links() {
             const isCopied = copiedId === (link.id || link._id);
 
             return (
-              <div key={link.id || link._id} className="card-3d p-4 rounded-2xl flex flex-col justify-between group">
+              <div key={link.id || link._id} className="card-3d p-4 rounded-2xl flex flex-col justify-between group bg-[#fbf9f0]">
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2.5">
                       <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="sm" />
                       <div>
-                        <span className="text-[9px] font-mono font-black uppercase tracking-wider text-secondary bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20 inline-block">
-                          {link.category || label}
+                        <span className={`text-[9px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded border inline-block ${catStyle.badge}`}>
+                          {link.category || catStyle.label}
                         </span>
                         <p className="text-[10px] font-mono text-primary/50 mt-0.5">{domain}</p>
                       </div>
