@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import useAppStore from '../store';
 import Icon3D, { getCategoryTheme } from '../components/Icon3D';
+import WebsiteIcon from '../components/WebsiteIcon';
 import { PlusCircle, Database, ExternalLink, ArrowRight, Activity, ShieldCheck, Sparkles } from 'lucide-react';
 
 const timeAgo = (date) => {
@@ -184,7 +185,7 @@ export default function Dashboard() {
 
                   return (
                     <div key={link.id} className="flex items-center gap-3.5 py-3 hover:bg-[#00f99b]/10 transition-colors px-2 rounded-xl group">
-                      <Icon3D name={name} theme={theme} size="sm" />
+                      <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="sm" />
                       
                       <div className="flex-grow min-w-0">
                         <a 

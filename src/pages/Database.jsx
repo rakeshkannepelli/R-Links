@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import useAppStore from '../store';
 import Icon3D, { getCategoryTheme } from '../components/Icon3D';
+import WebsiteIcon from '../components/WebsiteIcon';
 import SkeletonCard from '../components/SkeletonCard';
 import toast from 'react-hot-toast';
 import { 
@@ -350,7 +351,7 @@ export default function Database() {
                 {/* Top Badge & Pin Indicator */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <Icon3D name={name} theme={theme} size="md" />
+                    <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="md" />
                     <div className="min-w-0">
                       <span className="text-[9px] font-mono font-black uppercase tracking-wider text-secondary bg-secondary/10 px-2 py-0.5 rounded-md border border-secondary/20 inline-block truncate">
                         {link.category || 'UNCATEGORIZED'}
@@ -446,7 +447,7 @@ export default function Database() {
                 className="p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-[#00f99b]/10 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <Icon3D name={name} theme={theme} size="sm" />
+                  <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[9px] font-mono font-bold uppercase text-secondary bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/20">

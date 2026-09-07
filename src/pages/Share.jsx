@@ -235,35 +235,284 @@ export default function Share() {
       toast.success(`Exported ${links.length} records to JSON`);
 
     } else if (outputFormat === 'HTML') {
+      const exportDate = new Date().toLocaleString();
+      const categories = ['ALL', ...new Set(links.map(l => (l.category || 'WORK').toUpperCase()))];
+      
       let html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RLinks Vault Export</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RLINKS Vault Archive (${links.length} Links)</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #fbf9f0; color: #1b1c17; }
-    h1 { border-bottom: 2px solid #5f5e5e; padding-bottom: 10px; text-transform: uppercase; }
-    .card { background: #ffffff; border: 2px solid #5f5e5e; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 4px 4px 0 #006d41; }
-    .badge { background: #00f99b; color: #006d41; font-weight: bold; padding: 4px 8px; border-radius: 6px; font-size: 11px; text-transform: uppercase; }
-    a { color: #006d41; font-weight: bold; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .meta { font-size: 12px; color: #666; margin-top: 8px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: #0f1115;
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      background: #181b20;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chip {
+      background: #00f99b;
+      color: #004d2e;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .meta-text { font-size: 12px; color: #9ca3af; font-family: monospace; }
+    .search-box {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: #0f1115;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus { border-color: #00f99b; }
+    .categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .cat-btn {
+      background: #252830;
+      color: #9ca3af;
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.15s;
+    }
+    .cat-btn:hover, .cat-btn.active {
+      background: #00f99b;
+      color: #004d2e;
+      border-color: #00f99b;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: #181b20;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 249, 155, 0.4);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #ffffff;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .icon-img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+    .card-category {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #00f99b;
+      letter-spacing: 0.5px;
+      font-family: monospace;
+    }
+    .card-domain {
+      font-size: 11px;
+      color: #9ca3af;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #ffffff;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px;
+      color: #6b7280;
+    }
+    .btn-open {
+      background: #00f99b;
+      color: #004d2e;
+      font-weight: 800;
+      font-size: 10px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-open:hover { background: #34d399; }
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
-  <h1>RLINKS VAULT EXPORT (${links.length} Records)</h1>
-  <p>Exported on ${new Date().toLocaleString()}</p>
-  <div>
-${links.map(l => `    <div class="card">
-      <span class="badge">${l.category || 'PERSONAL'}</span>
-      <h3><a href="${l.url}" target="_blank">${l.title || l.url}</a></h3>
-      <div class="meta">${l.url} &bull; ${new Date(l.date).toLocaleDateString()}</div>
-    </div>`).join('\n')}
+  <div class="container">
+    <header>
+      <div class="header-top">
+        <h1>RLINKS VAULT <span class="chip">${links.length} SAVED</span></h1>
+        <span class="meta-text">Exported: ${exportDate}</span>
+      </div>
+      <input type="text" id="searchInput" class="search-box" placeholder="Search saved links by name, URL, or domain..." />
+      <div class="categories">
+        ${categories.map(c => `<button class="cat-btn ${c === 'ALL' ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('')}
+      </div>
+    </header>
+
+    <main class="grid" id="linksGrid">
+      ${links.map(l => {
+        let domain = '';
+        try {
+          domain = new URL(l.url).hostname.replace('www.', '');
+        } catch {
+          domain = l.url;
+        }
+        const faviconUrl = l.icon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : '');
+        const cat = (l.category || 'WORK').toUpperCase();
+        return `<div class="card" data-cat="${cat}" data-title="${(l.title || '').toLowerCase()}" data-url="${(l.url || '').toLowerCase()}">
+          <div>
+            <div class="card-header">
+              <div class="icon-box">
+                <img class="icon-img" src="${faviconUrl}" alt="${domain}" onerror="this.src='https://icons.duckduckgo.com/ip3/${domain}.ico'" />
+              </div>
+              <div style="min-width: 0;">
+                <span class="card-category">${cat}</span>
+                <p class="card-domain">${domain}</p>
+              </div>
+            </div>
+            <h3 class="card-title" style="margin-top: 10px;">${l.title || l.url}</h3>
+          </div>
+          <div class="card-footer">
+            <span>${new Date(l.date).toLocaleDateString()}</span>
+            <a href="${l.url}" target="_blank" rel="noopener noreferrer" class="btn-open">OPEN &rarr;</a>
+          </div>
+        </div>`;
+      }).join('\n')}
+    </main>
   </div>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const catBtns = document.querySelectorAll('.cat-btn');
+    const cards = document.querySelectorAll('.card');
+    let currentCat = 'ALL';
+
+    function filterLinks() {
+      const query = searchInput.value.toLowerCase().trim();
+      let visible = 0;
+      cards.forEach(card => {
+        const title = card.getAttribute('data-title') || '';
+        const url = card.getAttribute('data-url') || '';
+        const cat = card.getAttribute('data-cat') || '';
+        const matchesQuery = !query || title.includes(query) || url.includes(query);
+        const matchesCat = currentCat === 'ALL' || cat === currentCat;
+        if (matchesQuery && matchesCat) {
+          card.style.display = 'flex';
+          visible++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    searchInput.addEventListener('input', filterLinks);
+    catBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        catBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCat = btn.getAttribute('data-cat');
+        filterLinks();
+      });
+    });
+  </script>
 </body>
 </html>`;
       triggerDownload(new Blob([html], { type: 'text/html;charset=utf-8;' }), 'rlinks_vault.html');
-      toast.success(`Exported ${links.length} records to HTML`);
+      toast.success(`Exported ${links.length} records to Web HTML`);
 
     } else if (outputFormat === 'PDF') {
       toast.success('Opening print / PDF dialog...');

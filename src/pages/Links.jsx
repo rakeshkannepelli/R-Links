@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import useAppStore from '../store';
 import Icon3D, { getCategoryTheme } from '../components/Icon3D';
+import WebsiteIcon from '../components/WebsiteIcon';
 import toast from 'react-hot-toast';
 import { 
   Plus, 
@@ -138,10 +139,20 @@ export default function Links() {
         }
       }
 
+      let detectedDomain = '';
+      try {
+        detectedDomain = new URL(cleanedUrl).hostname.replace('www.', '');
+      } catch {
+        detectedDomain = '';
+      }
+
+      const iconToSave = detectedDomain ? `https://www.google.com/s2/favicons?domain=${detectedDomain}&sz=128` : '';
+
       await addLink({
         url: cleanedUrl,
         title: finalTitle,
         category: selectedCategory,
+        icon: iconToSave,
         tags: [selectedCategory.toLowerCase()],
         date: new Date().toISOString(),
         pinned: false
@@ -211,16 +222,31 @@ export default function Links() {
         </div>
 
         <form onSubmit={handleAdd} className="space-y-6">
-          {/* URL Input */}
+          {/* URL Input with Live Website Icon Detection */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
-              <LinkIcon size={14} className="text-secondary" />
-              <span>Website URL</span>
-              <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center bg-[#f0eee5] border-2 border-[#5f5e5e]/25 rounded-2xl px-4 py-3 focus-within:border-secondary transition-all shadow-inner">
-              <Globe size={18} className="text-primary/40 mr-3 shrink-0" />
+            <div className="flex justify-between items-center">
+              <label htmlFor="url-input" className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
+                <LinkIcon size={14} className="text-secondary" />
+                <span>Website URL</span>
+                <span className="text-red-500">*</span>
+              </label>
+              {url.trim() && (
+                <span className="text-[10px] font-mono font-bold text-secondary flex items-center gap-1.5">
+                  <span>LIVE ICON DETECTED</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping" />
+                </span>
+              )}
+            </div>
+            <div className="flex items-center bg-[#f0eee5] border-2 border-[#5f5e5e]/25 rounded-2xl px-4 py-2.5 focus-within:border-secondary transition-all shadow-inner">
+              {url.trim() ? (
+                <div className="mr-3 shrink-0">
+                  <WebsiteIcon url={url} category={selectedCategory} size="sm" />
+                </div>
+              ) : (
+                <Globe size={18} className="text-primary/40 mr-3 shrink-0" />
+              )}
               <input
+                id="url-input"
                 required
                 type="text"
                 value={url}
@@ -233,12 +259,13 @@ export default function Links() {
 
           {/* Title Input */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
+            <label htmlFor="title-input" className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
               <Type size={14} className="text-secondary" />
               <span>Display Title (Optional)</span>
             </label>
             <div className="flex items-center bg-[#f0eee5] border-2 border-[#5f5e5e]/25 rounded-2xl px-4 py-2.5 focus-within:border-secondary transition-all shadow-inner">
               <input
+                id="title-input"
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
@@ -289,17 +316,17 @@ export default function Links() {
             </div>
           </div>
 
-          {/* Submit Action */}
+          {/* Submit Action — High-Contrast Dark Tactile Button */}
           <div className="pt-4 flex justify-end">
             <button
               disabled={adding}
               type="submit"
-              className="btn-3d w-full sm:w-auto bg-primary text-on-primary font-bold uppercase tracking-wider py-3.5 px-8 rounded-xl flex items-center justify-center gap-3 text-sm disabled:opacity-50"
+              className="w-full sm:w-auto bg-[#121417] text-white hover:bg-black active:translate-y-0.5 font-black uppercase tracking-wider py-4 px-9 rounded-2xl flex items-center justify-center gap-3 text-sm shadow-[5px_5px_0px_#00f99b] border-2 border-[#121417] hover:shadow-[6px_6px_0px_#00f99b] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {adding ? (
                 <>
-                  <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                  <span>SAVING TO VAULT...</span>
+                  <span className="animate-spin w-4 h-4 border-2 border-[#00f99b] border-t-transparent rounded-full" />
+                  <span className="text-[#00f99b]">SAVING TO VAULT...</span>
                 </>
               ) : (
                 <>
@@ -327,7 +354,7 @@ export default function Links() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {recentLinks.map((link) => {
-            const { name, theme, label } = getCategoryTheme(link.category);
+            const { label } = getCategoryTheme(link.category);
             let domain = '';
             try {
               domain = new URL(link.url).hostname.replace('www.', '');
@@ -342,7 +369,7 @@ export default function Links() {
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2.5">
-                      <Icon3D name={name} theme={theme} size="sm" />
+                      <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="sm" />
                       <div>
                         <span className="text-[9px] font-mono font-black uppercase tracking-wider text-secondary bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20 inline-block">
                           {link.category || label}

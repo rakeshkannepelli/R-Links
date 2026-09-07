@@ -53,29 +53,29 @@ export default function ResetPassword() {
 
           <form onSubmit={handleSubmit} className="space-y-8 md:space-y-10">
             <div className="relative group">
-              <label className="block font-label text-[10px] font-bold text-primary/50 mb-2 uppercase tracking-widest">
+              <label htmlFor="new-passphrase" className="block font-label text-[11px] font-bold text-primary mb-2 uppercase tracking-widest">
                 [00] NEW PASSPHRASE
               </label>
-              <div className="flex items-center border-b-2 border-primary/20 group-focus-within:border-secondary transition-all">
+              <div className="flex items-center border-b-2 border-primary/40 group-focus-within:border-secondary transition-all">
                 <span className="text-secondary font-bold mr-2 text-xl tracking-tighter">&gt;</span>
-                <input required disabled={isLoading} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/20 py-2 disabled:opacity-50" placeholder="••••••••" type="password" />
+                <input id="new-passphrase" required disabled={isLoading} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/40 py-2 disabled:opacity-50" placeholder="••••••••" type="password" />
                 <span className="w-3 h-6 bg-secondary/30 hidden group-focus-within:block blink"></span>
               </div>
             </div>
 
             <div className="pt-4">
-              <button disabled={isLoading} className="w-full bg-primary text-on-primary py-5 px-8 font-bold flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] hover:bg-on-surface-variant disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+              <button disabled={isLoading} className="w-full bg-[#121417] text-white py-5 px-8 font-black flex items-center justify-between group relative active:translate-y-1 active:shadow-none transition-all shadow-[6px_6px_0px_#00f99b] border-2 border-[#121417] hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
                 <span className="uppercase tracking-tighter text-lg">
                   {isLoading ? (
-                    <span className="flex items-center">
-                      <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-3 shrink-0"></span>
+                    <span className="flex items-center text-[#00f99b]">
+                      <span className="animate-spin inline-block w-4 h-4 border-2 border-[#00f99b] border-t-transparent rounded-full mr-3 shrink-0"></span>
                       RESETTING_PASSPHRASE...
                     </span>
                   ) : (
                     'UPDATE PASSPHRASE'
                   )}
                 </span>
-                <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">trending_flat</span>
+                <span className="text-[#00f99b] text-xl font-bold group-hover:translate-x-1 transition-transform">&rarr;</span>
               </button>
             </div>
             
