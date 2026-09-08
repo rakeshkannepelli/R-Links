@@ -14,7 +14,8 @@ import {
   Share2, 
   TrendingUp, 
   CheckCircle2,
-  Shield
+  Zap,
+  Target
 } from 'lucide-react';
 
 export default function Profile() {
@@ -45,30 +46,40 @@ export default function Profile() {
   // Dynamic Category Breakdown sorted by count
   const categoryCounts = useMemo(() => {
     const counts = links.reduce((acc, link) => {
-      const cat = link.category || 'PERSONAL';
+      const cat = (link.category || 'PERSONAL').trim().toUpperCase();
       acc[cat] = (acc[cat] || 0) + 1;
       return acc;
     }, {});
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
   }, [links]);
 
-  // Curation Activity Matrix mapped to last 35 days (5 rows x 7 cols)
-  const { contributionGrid, totalMatrixLinks, activeDaysCount, maxInSingleDay } = useMemo(() => {
-    const totalDays = 35; // 5 weeks of 7 days
+  // 1-Month (30 Days) Responsive Curation Matrix & Streak Calculation
+  const { 
+    monthDays, 
+    activeDaysCount, 
+    totalMonthLinks, 
+    currentStreak, 
+    bestStreak, 
+    consistencyRate 
+  } = useMemo(() => {
+    const TOTAL_DAYS = 28; // Exactly 4 full 7-day weeks for a pristine 7-column calendar
     const daysArray = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    for (let i = totalDays - 1; i >= 0; i--) {
+    for (let i = TOTAL_DAYS - 1; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       daysArray.push({
         date: d,
+        dayNum: d.getDate(),
+        weekday: d.toLocaleDateString('en-US', { weekday: 'narrow' }),
         count: 0,
         label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })
       });
     }
 
+    // Map user links to date cells
     links.forEach(l => {
       if (!l.date) return;
       const d = new Date(l.date);
@@ -80,33 +91,61 @@ export default function Profile() {
 
     let totalLinks = 0;
     let activeDays = 0;
-    let maxDay = 0;
 
     const cells = daysArray.map(day => {
       totalLinks += day.count;
       if (day.count > 0) activeDays += 1;
-      if (day.count > maxDay) maxDay = day.count;
 
-      let color = 'bg-[#e4e3da] border-[#5f5e5e]/20';
+      let color = 'bg-[#f0eee5] border-[#5f5e5e]/20 text-primary/40';
       let glow = '';
       if (day.count === 1) {
-        color = 'bg-[#86efac] border-[#22c55e]';
+        color = 'bg-[#86efac] border-[#22c55e] text-[#006d41]';
       } else if (day.count >= 2 && day.count <= 4) {
-        color = 'bg-[#00f99b] border-[#006d41]';
+        color = 'bg-[#00f99b] border-[#006d41] text-[#00472a]';
         glow = 'shadow-[0_0_8px_rgba(0,249,155,0.4)]';
       } else if (day.count > 4) {
         color = 'bg-[#006d41] border-[#002110] text-white';
-        glow = 'shadow-[0_0_12px_rgba(0,249,155,0.7)]';
+        glow = 'shadow-[0_0_12px_rgba(0,249,155,0.6)]';
       }
 
       return { ...day, color, glow };
     });
 
+    // Compute active consecutive streaks
+    let current = 0;
+    let maxStreak = 0;
+    let tempStreak = 0;
+
+    // Check consecutive days ending today/yesterday
+    for (let i = cells.length - 1; i >= 0; i--) {
+      if (cells[i].count > 0) {
+        current++;
+      } else {
+        // If today has 0 links yet, allow streak from yesterday
+        if (i === cells.length - 1) continue;
+        break;
+      }
+    }
+
+    // Best streak in window
+    for (let i = 0; i < cells.length; i++) {
+      if (cells[i].count > 0) {
+        tempStreak++;
+        if (tempStreak > maxStreak) maxStreak = tempStreak;
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    const rate = Math.round((activeDays / TOTAL_DAYS) * 100);
+
     return {
-      contributionGrid: cells,
-      totalMatrixLinks: totalLinks,
+      monthDays: cells,
       activeDaysCount: activeDays,
-      maxInSingleDay: maxDay
+      totalMonthLinks: totalLinks,
+      currentStreak: current,
+      bestStreak: Math.max(current, maxStreak),
+      consistencyRate: rate
     };
   }, [links]);
 
@@ -143,13 +182,15 @@ export default function Profile() {
     }
   };
 
+  const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
   return (
     <div className="space-y-8 page-enter pb-16">
       {/* Hidden File Input */}
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
 
       {/* Hero Profile Deck */}
-      <section className="card-3d p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-[#fbf9f0]">
+      <section className="card-3d p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
         <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8">
           {/* Avatar & Details */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 w-full lg:w-auto">
@@ -173,7 +214,7 @@ export default function Profile() {
                   {currentRank.title}
                 </span>
                 <span className="text-[10px] font-mono text-primary/50 uppercase">
-                  ACTIVE
+                  ACTIVE OPERATOR
                 </span>
               </div>
 
@@ -187,7 +228,7 @@ export default function Profile() {
 
               <button 
                 onClick={handleEditDetails} 
-                className="btn-3d-secondary mt-3 px-4 py-2 bg-[#f0eee5] text-primary text-xs font-mono font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 mx-auto sm:mx-0"
+                className="btn-3d-secondary mt-3 px-4 py-2 bg-[#f0eee5] text-primary text-xs font-mono font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 mx-auto sm:mx-0 cursor-pointer"
               >
                 <Edit3 size={14} className="text-secondary" />
                 <span>Modify Operator Data</span>
@@ -231,81 +272,53 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* Main Grid: Curation Matrix & Achievements */}
+      {/* Main Grid: Curation Matrix & Streak Box */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Curation Matrix (Left 8 Cols) */}
+        {/* Simple, Clean, Small Curation Streak Widget (Left 8 Cols) */}
         <div className="lg:col-span-8 space-y-6">
-          <section className="card-3d p-6 sm:p-7 rounded-3xl bg-[#fbf9f0] space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-[#5f5e5e]/15 pb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Flame size={18} className="text-[#006d41]" />
-                  <h2 className="font-black text-xl uppercase tracking-tight">Curation Matrix</h2>
-                </div>
-                <p className="text-xs font-mono text-primary/60">
-                  35-day activity telemetry synchronized with your vault
-                </p>
+          <section className="card-3d p-5 rounded-2xl bg-[#fbf9f0] border-2 border-[#5f5e5e]/25 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame size={16} className="text-[#00f99b] fill-[#006d41]" />
+                <h3 className="font-bold text-sm uppercase tracking-tight text-primary">
+                  Activity Streak
+                </h3>
               </div>
 
-              <div className="flex items-center gap-4 text-right">
-                <div className="bg-[#f0eee5] border border-[#5f5e5e]/20 px-3 py-1 rounded-xl">
-                  <span className="text-xl font-black text-secondary block leading-tight">{activeDaysCount}</span>
-                  <span className="text-[9px] font-mono font-bold uppercase text-primary/60">ACTIVE DAYS</span>
-                </div>
-                <div className="bg-[#f0eee5] border border-[#5f5e5e]/20 px-3 py-1 rounded-xl">
-                  <span className="text-xl font-black text-primary block leading-tight">{totalMatrixLinks}</span>
-                  <span className="text-[9px] font-mono font-bold uppercase text-primary/60">WINDOW LINKS</span>
-                </div>
+              <div className="flex items-center gap-1.5 bg-[#121417] text-[#00f99b] px-2.5 py-1 rounded-lg border border-[#00f99b]/40 font-mono text-xs font-black">
+                <Flame size={12} className="fill-current" />
+                <span>{currentStreak} DAY STREAK</span>
               </div>
             </div>
 
-            {/* 3D Curation Matrix Grid */}
-            <div className="space-y-3">
-              <div className="overflow-x-auto no-scrollbar pb-2">
-                <div className="grid grid-flow-col grid-rows-5 gap-2.5 min-w-max p-2 bg-[#f0eee5] rounded-2xl border-2 border-[#5f5e5e]/20 shadow-inner">
-                  {contributionGrid.map((cell, idx) => (
-                    <div
-                      key={idx}
-                      onMouseEnter={() => setHoveredCell(cell)}
-                      onMouseLeave={() => setHoveredCell(null)}
-                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg border-2 ${cell.color} ${cell.glow} cursor-pointer transition-all duration-200 transform hover:scale-125 hover:z-20 flex items-center justify-center`}
-                      title={`${cell.label}: ${cell.count} links`}
-                    >
-                      {cell.count > 0 && (
-                        <span className={`text-[9px] font-mono font-black ${cell.count > 4 ? 'text-white' : 'text-[#006d41]'}`}>
-                          {cell.count}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Clean compact dot row */}
+            <div className="flex items-center justify-between gap-1.5 p-2.5 bg-[#f0eee5] rounded-xl border border-[#5f5e5e]/20 overflow-x-auto no-scrollbar">
+              {monthDays.map((cell, idx) => (
+                <div
+                  key={idx}
+                  onMouseEnter={() => setHoveredCell(cell)}
+                  onMouseLeave={() => setHoveredCell(null)}
+                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md border ${cell.color} ${cell.glow} transition-all duration-150 transform hover:scale-125 cursor-pointer shrink-0`}
+                  title={`${cell.label}: ${cell.count} links`}
+                />
+              ))}
+            </div>
 
-              {/* Dynamic Cell Tooltip Info */}
-              <div className="flex justify-between items-center text-xs font-mono font-bold min-h-[24px]">
-                <div className="text-secondary">
-                  {hoveredCell ? (
-                    <span>📅 {hoveredCell.label}: <strong className="text-primary">{hoveredCell.count} link{hoveredCell.count === 1 ? '' : 's'}</strong> stored</span>
-                  ) : (
-                    <span className="text-primary/40 font-normal">Hover any cell for daily contribution details</span>
-                  )}
-                </div>
-
-                {/* Legend */}
-                <div className="flex items-center gap-1.5 text-[10px] uppercase text-primary/60 font-mono">
-                  <span>Less</span>
-                  <div className="w-3 h-3 rounded bg-[#e4e3da] border border-[#5f5e5e]/20" />
-                  <div className="w-3 h-3 rounded bg-[#86efac] border border-[#22c55e]" />
-                  <div className="w-3 h-3 rounded bg-[#00f99b] border-[#006d41]" />
-                  <div className="w-3 h-3 rounded bg-[#006d41] border-[#002110]" />
-                  <span>More</span>
-                </div>
-              </div>
+            {/* Micro stats strip */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-primary/60 pt-0.5">
+              <span>
+                {hoveredCell ? (
+                  <strong className="text-secondary">{hoveredCell.label}: {hoveredCell.count} saved</strong>
+                ) : (
+                  <span>{activeDaysCount} active days ({consistencyRate}% consistency)</span>
+                )}
+              </span>
+              <span className="text-primary/40 font-bold">{totalMonthLinks} links this month</span>
             </div>
           </section>
 
           {/* Category Distribution Breakdown */}
-          <section className="card-3d p-6 rounded-3xl bg-[#fbf9f0]">
+          <section className="card-3d p-6 rounded-3xl bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
             <h3 className="text-sm font-black uppercase tracking-wider text-primary border-b border-[#5f5e5e]/15 pb-2 mb-4 flex items-center justify-between">
               <span>Top Stored Categories</span>
               <Layers size={16} className="text-secondary" />
@@ -334,7 +347,7 @@ export default function Profile() {
 
         {/* Right 4 Cols: Ranks & Milestones */}
         <div className="lg:col-span-4 space-y-6">
-          <section className="card-3d p-6 rounded-3xl bg-[#fbf9f0] space-y-5">
+          <section className="card-3d p-6 rounded-3xl bg-[#fbf9f0] border-2 border-[#5f5e5e]/25 space-y-5">
             <h3 className="text-sm font-black uppercase tracking-wider text-primary border-b border-[#5f5e5e]/15 pb-2 flex items-center gap-2">
               <Award size={16} className="text-secondary" />
               <span>Rank Milestones</span>
@@ -380,7 +393,7 @@ export default function Profile() {
               toast.success('Preparing profile summary');
               setTimeout(() => window.print(), 300);
             }} 
-            className="btn-3d w-full bg-primary text-on-primary py-3.5 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+            className="btn-3d w-full bg-primary text-on-primary py-3.5 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
           >
             <Share2 size={15} className="text-[#00f99b]" />
             <span>Export Profile Sheet</span>
@@ -400,7 +413,7 @@ export default function Profile() {
               <button 
                 type="button" 
                 onClick={() => setIsEditingDetails(false)} 
-                className="text-primary/50 hover:text-primary font-bold text-sm"
+                className="text-primary/50 hover:text-primary font-bold text-sm cursor-pointer"
               >
                 ✕
               </button>
@@ -432,13 +445,13 @@ export default function Profile() {
                 <button 
                   type="button" 
                   onClick={() => setIsEditingDetails(false)} 
-                  className="btn-3d-secondary py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase flex-1"
+                  className="btn-3d-secondary py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase flex-1 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="btn-3d bg-secondary text-white py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase flex-1"
+                  className="btn-3d bg-secondary text-white py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase flex-1 cursor-pointer"
                 >
                   Save Data
                 </button>

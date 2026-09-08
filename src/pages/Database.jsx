@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import useAppStore from '../store';
 import Icon3D, { getCategoryTheme, getCategoryStyle } from '../components/Icon3D';
-import WebsiteIcon from '../components/WebsiteIcon';
+import WebsiteIcon, { extractDomain } from '../components/WebsiteIcon';
 import SkeletonCard from '../components/SkeletonCard';
 import toast from 'react-hot-toast';
 import { 
@@ -36,9 +36,9 @@ export default function Database() {
   const [sortBy, setSortBy] = useState('pinned_first'); // 'pinned_first' | 'newest' | 'alphabetical'
   const [copiedId, setCopiedId] = useState(null);
 
-  // Pagination State
+  // Pagination State — 9 links per page in grid view (3x3 grid)
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = viewMode === 'grid' ? 6 : 10;
+  const itemsPerPage = viewMode === 'grid' ? 9 : 10;
 
   // Inline Edit State
   const [editingId, setEditingId] = useState(null);
@@ -46,18 +46,45 @@ export default function Database() {
   const [editUrl, setEditUrl] = useState('');
   const [editCategory, setEditCategory] = useState('');
 
-  // Category list with accurate counts
+  // Dynamic Category list with automatic discovery of user categories
+  const availableCategories = useMemo(() => {
+    const standard = [
+      'ALL', 
+      'PINNED', 
+      'AI TOOLS', 
+      'WORK', 
+      'LEARNING', 
+      'DESIGN', 
+      'DEV & TECH', 
+      'GAMING', 
+      'MEDIA', 
+      'SHOPPING', 
+      'SOCIAL', 
+      'LIFESTYLE', 
+      'PERSONAL'
+    ];
+    const customCats = new Set();
+    links.forEach(l => {
+      if (l.category) {
+        const norm = l.category.trim().toUpperCase();
+        if (norm && !standard.includes(norm)) {
+          customCats.add(norm);
+        }
+      }
+    });
+    return [...standard, ...Array.from(customCats)];
+  }, [links]);
+
+  // Category counts with normalized lookups
   const categoryCounts = useMemo(() => {
     const counts = { ALL: links.length, PINNED: 0 };
     links.forEach(l => {
       if (l.pinned) counts.PINNED += 1;
-      const cat = (l.category || 'UNCATEGORIZED').toUpperCase();
+      const cat = (l.category || 'PERSONAL').trim().toUpperCase();
       counts[cat] = (counts[cat] || 0) + 1;
     });
     return counts;
   }, [links]);
-
-  const availableCategories = ['ALL', 'PINNED', 'AI TOOLS', 'WORK', 'LEARNING', 'DESIGN', 'DEV & TECH', 'MEDIA', 'SHOPPING', 'SOCIAL', 'LIFESTYLE', 'PERSONAL'];
 
   // Filter and Sort Pipeline
   const filteredLinks = useMemo(() => {
@@ -72,7 +99,9 @@ export default function Database() {
 
       if (filterCategory === 'ALL') return true;
       if (filterCategory === 'PINNED') return Boolean(l.pinned);
-      return (l.category || '').toUpperCase() === filterCategory;
+      
+      const itemCat = (l.category || 'PERSONAL').trim().toUpperCase();
+      return itemCat === filterCategory.trim().toUpperCase();
     });
 
     return result.sort((a, b) => {
@@ -133,20 +162,20 @@ export default function Database() {
               DATABASE VAULT
             </span>
             <span className="text-[10px] font-mono text-primary/50 uppercase">
-              ENCRYPTED INDEX
+              3×3 MATRIX VIEW // {filteredLinks.length} INDEXED
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black uppercase text-primary tracking-tight leading-none">
             Stored Link Archives
           </h1>
           <p className="mt-1 text-xs sm:text-sm text-primary/70 font-medium">
-            Search, sort, and access your curated resources with instant 3D tactile controls.
+            Search, filter by category, and access your curated resources with instant 3D tactile controls.
           </p>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
           <Link to="/links" className="w-full md:w-auto">
-            <button className="btn-3d w-full bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold font-label text-xs tracking-wider flex items-center justify-center gap-2 uppercase">
+            <button className="btn-3d w-full bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold font-label text-xs tracking-wider flex items-center justify-center gap-2 uppercase cursor-pointer">
               <Plus size={16} className="text-[#00f99b]" />
               <span>New Link</span>
             </button>
@@ -155,7 +184,7 @@ export default function Database() {
       </div>
 
       {/* 3D Search Deck & Filters */}
-      <div className="card-3d p-4 sm:p-5 rounded-2xl space-y-4">
+      <div className="card-3d p-4 sm:p-5 rounded-2xl space-y-4 bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
         {/* Search Bar */}
         <div className="relative flex items-center">
           <span className="absolute left-4 text-secondary">
@@ -168,13 +197,13 @@ export default function Database() {
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Search resources by title, domain, keywords..."
+            placeholder="Search resources by title, domain, gaming, ai, tools..."
             className="w-full bg-[#f0eee5] border-2 border-[#5f5e5e]/20 rounded-xl pl-12 pr-10 py-3 text-sm sm:text-base font-bold text-primary placeholder:text-primary/30 outline-none focus:border-secondary transition-all shadow-inner"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 p-1.5 hover:bg-[#5f5e5e]/10 rounded-lg text-primary/50 hover:text-primary"
+              className="absolute right-3 p-1.5 hover:bg-[#5f5e5e]/10 rounded-lg text-primary/50 hover:text-primary cursor-pointer"
             >
               <X size={16} />
             </button>
@@ -191,7 +220,7 @@ export default function Database() {
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Sort Selector */}
-            <div className="flex items-center gap-1.5 bg-[#f0eee5] border border-[#5f5e5e]/20 rounded-lg px-2 py-1 text-xs">
+            <div className="flex items-center gap-1.5 bg-[#f0eee5] border border-[#5f5e5e]/20 rounded-lg px-2.5 py-1 text-xs">
               <ArrowUpDown size={13} className="text-secondary" />
               <select
                 value={sortBy}
@@ -208,14 +237,14 @@ export default function Database() {
             <div className="flex items-center border border-[#5f5e5e]/25 rounded-lg overflow-hidden p-0.5 bg-[#f0eee5]">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-[#fbf9f0] text-secondary shadow-sm font-bold' : 'text-primary/50 hover:text-primary'}`}
-                title="Tactile 3D Cards View"
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-[#fbf9f0] text-secondary shadow-sm font-bold' : 'text-primary/50 hover:text-primary'}`}
+                title="Tactile 3×3 Cards View"
               >
                 <LayoutGrid size={15} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-[#fbf9f0] text-secondary shadow-sm font-bold' : 'text-primary/50 hover:text-primary'}`}
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${viewMode === 'list' ? 'bg-[#fbf9f0] text-secondary shadow-sm font-bold' : 'text-primary/50 hover:text-primary'}`}
                 title="Compact Scanner View"
               >
                 <List size={15} />
@@ -237,7 +266,7 @@ export default function Database() {
                   setFilterCategory(cat);
                   setCurrentPage(1);
                 }}
-                className={`px-3 py-1 rounded-xl text-[10px] sm:text-xs font-bold font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-xl text-[10px] sm:text-xs font-bold font-mono uppercase tracking-wider transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? `${catStyle.activeTab} -translate-y-0.5`
                     : 'bg-[#f0eee5] text-primary/70 border border-[#5f5e5e]/20 hover:bg-[#e4e3da] hover:text-primary'
@@ -261,7 +290,7 @@ export default function Database() {
               <Edit3 size={16} />
               Edit Stored Resource
             </h3>
-            <button type="button" onClick={() => setEditingId(null)} className="text-primary/50 hover:text-primary">
+            <button type="button" onClick={() => setEditingId(null)} className="text-primary/50 hover:text-primary cursor-pointer">
               <X size={16} />
             </button>
           </div>
@@ -298,10 +327,10 @@ export default function Database() {
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setEditingId(null)} className="btn-3d-secondary px-4 py-1.5 rounded-lg text-xs font-bold uppercase">
+            <button type="button" onClick={() => setEditingId(null)} className="btn-3d-secondary px-4 py-1.5 rounded-lg text-xs font-bold uppercase cursor-pointer">
               Cancel
             </button>
-            <button type="submit" className="btn-3d bg-secondary text-white px-5 py-1.5 rounded-lg text-xs font-bold uppercase">
+            <button type="submit" className="btn-3d bg-secondary text-white px-5 py-1.5 rounded-lg text-xs font-bold uppercase cursor-pointer">
               Save Changes
             </button>
           </div>
@@ -311,13 +340,13 @@ export default function Database() {
       {/* Loading Skeleton States */}
       {isLinksLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(9)].map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
       ) : filteredLinks.length === 0 ? (
         /* Empty State */
-        <div className="card-3d p-12 rounded-2xl text-center space-y-4 flex flex-col items-center justify-center">
+        <div className="card-3d p-12 rounded-2xl text-center space-y-4 flex flex-col items-center justify-center bg-[#fbf9f0] border-2 border-[#5f5e5e]/20">
           <Icon3D name="search" theme="slate" size="lg" />
           <h3 className="font-bold text-lg uppercase tracking-tight text-primary">No Matching Records Found</h3>
           <p className="text-xs text-primary/60 max-w-sm">
@@ -325,40 +354,33 @@ export default function Database() {
           </p>
           <button 
             onClick={() => { setSearch(''); setFilterCategory('ALL'); }}
-            className="btn-3d px-4 py-2 bg-[#f0eee5] text-xs font-bold uppercase rounded-xl"
+            className="btn-3d px-4 py-2 bg-[#f0eee5] text-xs font-bold uppercase rounded-xl cursor-pointer"
           >
             Reset All Filters
           </button>
         </div>
       ) : viewMode === 'grid' ? (
-        /* ═══════════════ REALISTIC 3D CARDS GRID ═══════════════ */
+        /* ═══════════════ REALISTIC 3D CARDS 3x3 GRID (9 LINKS) ═══════════════ */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {paginatedLinks.map((link) => {
-            const { name, theme } = getCategoryTheme(link.category);
-            let domain = '';
-            try {
-              domain = new URL(link.url).hostname.replace('www.', '');
-            } catch {
-              domain = link.url;
-            }
-
+            const domain = extractDomain(link.url);
             const isCopied = copiedId === (link.id || link._id);
             const catStyle = getCategoryStyle(link.category);
 
             return (
               <div 
                 key={link.id || link._id} 
-                className={`card-3d p-5 rounded-2xl flex flex-col justify-between relative group ${link.pinned ? 'border-amber-600/40 ring-1 ring-amber-500/20' : ''}`}
+                className={`card-3d p-5 rounded-2xl flex flex-col justify-between relative group bg-[#fbf9f0] border-2 border-[#5f5e5e]/25 transition-transform duration-200 hover:-translate-y-1 ${link.pinned ? 'border-amber-500/50 ring-2 ring-amber-400/20 shadow-[4px_4px_0px_#b45309]' : ''}`}
               >
                 {/* Top Badge & Pin Indicator */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="md" />
                     <div className="min-w-0">
-                      <span className={`text-[9px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded-md border inline-block truncate ${catStyle.badge}`}>
+                      <span className={catStyle.flag}>
                         {link.category || catStyle.label}
                       </span>
-                      <p className="text-[10px] font-mono text-primary/60 truncate mt-0.5">
+                      <p className="text-[10px] font-mono text-primary/60 truncate mt-1">
                         {domain}
                       </p>
                     </div>
@@ -367,7 +389,7 @@ export default function Database() {
                   {/* Pin Toggle Button */}
                   <button
                     onClick={() => togglePin(link.id || link._id)}
-                    className={`p-1.5 rounded-lg border transition-all ${
+                    className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
                       link.pinned 
                         ? 'bg-amber-400 text-amber-950 border-amber-500 shadow-sm' 
                         : 'bg-[#f0eee5] text-primary/40 hover:text-amber-600 border-transparent'
@@ -408,7 +430,7 @@ export default function Database() {
                     {/* Quick Copy Button */}
                     <button
                       onClick={() => handleCopy(link.id || link._id, link.url)}
-                      className="btn-3d-secondary bg-[#fbf9f0] p-1.5 rounded-lg text-primary hover:text-secondary"
+                      className="btn-3d-secondary bg-[#fbf9f0] p-1.5 rounded-lg text-primary hover:text-secondary cursor-pointer"
                       title="Copy URL"
                     >
                       {isCopied ? <Check size={14} className="text-secondary font-bold" /> : <Copy size={14} />}
@@ -419,14 +441,14 @@ export default function Database() {
                   <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEditInit(link)}
-                      className="p-1.5 hover:bg-[#5f5e5e]/10 text-primary/60 hover:text-primary rounded-lg"
+                      className="p-1.5 hover:bg-[#5f5e5e]/10 text-primary/60 hover:text-primary rounded-lg cursor-pointer"
                       title="Edit Link"
                     >
                       <Edit3 size={14} />
                     </button>
                     <button
                       onClick={() => handleDelete(link.id || link._id, link.title)}
-                      className="p-1.5 hover:bg-red-50 text-primary/60 hover:text-red-600 rounded-lg"
+                      className="p-1.5 hover:bg-red-50 text-primary/60 hover:text-red-600 rounded-lg cursor-pointer"
                       title="Delete Link"
                     >
                       <Trash2 size={14} />
@@ -439,9 +461,8 @@ export default function Database() {
         </div>
       ) : (
         /* ═══════════════ COMPACT SCANNER LIST VIEW ═══════════════ */
-        <div className="card-3d rounded-2xl overflow-hidden divide-y divide-[#5f5e5e]/15">
+        <div className="card-3d rounded-2xl overflow-hidden divide-y divide-[#5f5e5e]/15 bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
           {paginatedLinks.map((link) => {
-            const { name, theme } = getCategoryTheme(link.category);
             const catStyle = getCategoryStyle(link.category);
             const isCopied = copiedId === (link.id || link._id);
             return (
@@ -453,7 +474,7 @@ export default function Database() {
                   <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded border ${catStyle.badge}`}>
+                      <span className={catStyle.flag}>
                         {link.category || catStyle.label}
                       </span>
                       {link.pinned && (
@@ -476,7 +497,7 @@ export default function Database() {
                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                   <button
                     onClick={() => handleCopy(link.id || link._id, link.url)}
-                    className="p-1.5 bg-[#f0eee5] hover:bg-[#e4e3da] text-primary rounded-lg text-xs"
+                    className="p-1.5 bg-[#f0eee5] hover:bg-[#e4e3da] text-primary rounded-lg text-xs cursor-pointer"
                     title="Copy URL"
                   >
                     {isCopied ? <Check size={14} className="text-secondary" /> : <Copy size={14} />}
@@ -492,14 +513,14 @@ export default function Database() {
                   </a>
                   <button
                     onClick={() => handleEditInit(link)}
-                    className="p-1.5 hover:bg-[#5f5e5e]/10 text-primary/60 hover:text-primary rounded-lg"
+                    className="p-1.5 hover:bg-[#5f5e5e]/10 text-primary/60 hover:text-primary rounded-lg cursor-pointer"
                     title="Edit"
                   >
                     <Edit3 size={14} />
                   </button>
                   <button
                     onClick={() => handleDelete(link.id || link._id, link.title)}
-                    className="p-1.5 hover:bg-red-50 text-primary/60 hover:text-red-600 rounded-lg"
+                    className="p-1.5 hover:bg-red-50 text-primary/60 hover:text-red-600 rounded-lg cursor-pointer"
                     title="Delete"
                   >
                     <Trash2 size={14} />
@@ -517,7 +538,7 @@ export default function Database() {
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            className={`btn-3d px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider ${
+            className={`btn-3d px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider cursor-pointer ${
               currentPage === 1 
                 ? 'opacity-40 cursor-not-allowed bg-transparent border-transparent shadow-none' 
                 : 'bg-[#fbf9f0] text-primary'
@@ -533,7 +554,7 @@ export default function Database() {
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            className={`btn-3d px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider ${
+            className={`btn-3d px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider cursor-pointer ${
               currentPage === totalPages 
                 ? 'opacity-40 cursor-not-allowed bg-transparent border-transparent shadow-none' 
                 : 'bg-[#fbf9f0] text-primary'

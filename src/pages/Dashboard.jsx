@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import useAppStore from '../store';
 import Icon3D, { getCategoryTheme, getCategoryStyle } from '../components/Icon3D';
-import WebsiteIcon from '../components/WebsiteIcon';
-import { PlusCircle, Database, ExternalLink, ArrowRight, Activity, ShieldCheck, Sparkles } from 'lucide-react';
+import WebsiteIcon, { extractDomain } from '../components/WebsiteIcon';
+import { PlusCircle, Database, ExternalLink, ArrowRight, Activity, ShieldCheck, Sparkles, Star, Share2 } from 'lucide-react';
 
 const timeAgo = (date) => {
   if (!date) return 'Recently';
@@ -30,11 +30,12 @@ export default function Dashboard() {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-mono text-[10px] tracking-widest text-[#006d41] uppercase font-bold bg-[#00f99b]/20 px-2 py-0.5 rounded border border-[#006d41]/30">
-                SYSTEM OPERATIONAL
+              <span className="font-mono text-[10px] tracking-widest text-[#006d41] uppercase font-bold bg-[#00f99b]/20 px-2.5 py-0.5 rounded-full border border-[#006d41]/30 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#006d41] animate-ping" />
+                <span>SYSTEM OPERATIONAL</span>
               </span>
-              <span className="text-[10px] text-primary/50 font-mono hidden sm:inline">
-                NODE_ENCRYPTED_VAULT
+              <span className="text-[10px] text-primary/50 font-mono hidden sm:inline uppercase">
+                NODE_ENCRYPTED_VAULT v2.4
               </span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-primary uppercase leading-tight">
@@ -49,9 +50,9 @@ export default function Dashboard() {
 
       {/* 3D Tactile Stat Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group">
+        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
           <div className="flex justify-between items-start">
-            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase">TOTAL RECORDS</span>
+            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase font-mono">TOTAL RECORDS</span>
             <Icon3D name="link" theme="emerald" size="sm" />
           </div>
           <div>
@@ -64,9 +65,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group">
+        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
           <div className="flex justify-between items-start">
-            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase">SAVED & PINNED</span>
+            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase font-mono">SAVED & PINNED</span>
             <Icon3D name="star" theme="amber" size="sm" />
           </div>
           <div>
@@ -79,9 +80,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group">
+        <div className="card-3d p-5 rounded-2xl flex flex-col justify-between aspect-[4/3] sm:aspect-square relative overflow-hidden group bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
           <div className="flex justify-between items-start">
-            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase">CATEGORIES / TAGS</span>
+            <span className="font-label text-[10px] font-bold tracking-widest opacity-60 uppercase font-mono">CATEGORIES / TAGS</span>
             <Icon3D name="layers" theme="purple" size="sm" />
           </div>
           <div>
@@ -99,7 +100,7 @@ export default function Dashboard() {
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-8">
         {/* Actions Left Column */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="card-3d p-6 rounded-2xl">
+          <div className="card-3d p-6 rounded-2xl bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
             <h3 className="text-base font-bold mb-4 tracking-tight uppercase border-b-2 border-dashed border-[#5f5e5e]/20 pb-2 flex items-center justify-between">
               <span>Quick Actions</span>
               <Activity size={16} className="text-secondary" />
@@ -107,7 +108,7 @@ export default function Dashboard() {
             
             <div className="space-y-3">
               <Link to="/links" className="block">
-                <button className="btn-3d w-full bg-primary text-on-primary py-3.5 px-4 rounded-xl flex items-center justify-between group font-bold tracking-tight text-xs uppercase">
+                <button className="btn-3d w-full bg-primary text-on-primary py-3.5 px-4 rounded-xl flex items-center justify-between group font-bold tracking-tight text-xs uppercase cursor-pointer">
                   <span className="flex items-center gap-2">
                     <PlusCircle size={16} className="text-[#00f99b]" />
                     Archive New Link
@@ -117,7 +118,7 @@ export default function Dashboard() {
               </Link>
               
               <Link to="/database" className="block">
-                <button className="btn-3d-secondary w-full bg-[#fbf9f0] text-primary py-3.5 px-4 rounded-xl flex items-center justify-between hover:bg-[#f0eee5] transition-colors font-bold tracking-tight text-xs uppercase">
+                <button className="btn-3d-secondary w-full bg-[#fbf9f0] text-primary py-3.5 px-4 rounded-xl flex items-center justify-between hover:bg-[#f0eee5] transition-colors font-bold tracking-tight text-xs uppercase cursor-pointer">
                   <span className="flex items-center gap-2">
                     <Database size={16} className="text-secondary" />
                     Open Vault Archive
@@ -125,32 +126,33 @@ export default function Dashboard() {
                   <ArrowRight size={16} />
                 </button>
               </Link>
-            </div>
-          </div>
+              
+              <Link to="/database?filter=PINNED" className="block">
+                <button className="btn-3d-secondary w-full bg-[#fbf9f0] text-primary py-3.5 px-4 rounded-xl flex items-center justify-between hover:bg-[#f0eee5] transition-colors font-bold tracking-tight text-xs uppercase cursor-pointer">
+                  <span className="flex items-center gap-2">
+                    <Star size={16} className="text-amber-500" />
+                    Pinned Favorites
+                  </span>
+                  <ArrowRight size={16} />
+                </button>
+              </Link>
 
-          {/* Sync Status Banner */}
-          <div className="card-3d p-5 rounded-2xl bg-gradient-to-br from-[#006d41] to-[#00472a] text-white border-2 border-[#002110] relative overflow-hidden">
-            <div className="relative z-10 space-y-1.5">
-              <div className="flex items-center gap-2">
-                <ShieldCheck size={18} className="text-[#00f99b]" />
-                <h4 className="font-bold text-sm tracking-wide uppercase">Vault Status</h4>
-              </div>
-              <p className="text-xs text-white/90 leading-relaxed">
-                {isBackendOnline 
-                  ? 'All local links synchronized with secure cloud storage.' 
-                  : 'Operating in local offline cache mode. Changes will sync automatically.'}
-              </p>
-            </div>
-            {/* Background 3D Emblem */}
-            <div className="absolute -right-3 -bottom-4 opacity-15 pointer-events-none">
-              <Icon3D name="database" theme="emerald" size="xl" />
+              <Link to="/share" className="block">
+                <button className="btn-3d-secondary w-full bg-[#fbf9f0] text-primary py-3.5 px-4 rounded-xl flex items-center justify-between hover:bg-[#f0eee5] transition-colors font-bold tracking-tight text-xs uppercase cursor-pointer">
+                  <span className="flex items-center gap-2">
+                    <Share2 size={16} className="text-teal-600" />
+                    P2P Vault Share
+                  </span>
+                  <ArrowRight size={16} />
+                </button>
+              </Link>
             </div>
           </div>
         </div>
 
         {/* Recent Activity Right Column */}
         <div className="lg:col-span-8">
-          <div className="card-3d p-6 rounded-2xl">
+          <div className="card-3d p-6 rounded-2xl bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
             <div className="flex justify-between items-center border-b-2 border-[#5f5e5e]/20 pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-black tracking-tight uppercase">Recent Activity</h3>
@@ -175,17 +177,10 @@ export default function Dashboard() {
                 </div>
               ) : (
                 links.map((link) => {
-                  const { name, theme } = getCategoryTheme(link.category);
-                  let domain = '';
-                  try {
-                    domain = new URL(link.url).hostname.replace('www.', '');
-                  } catch {
-                    domain = link.url;
-                  }
-
+                  const domain = extractDomain(link.url);
                   const catStyle = getCategoryStyle(link.category);
                   return (
-                    <div key={link.id} className="flex items-center gap-3.5 py-3 hover:bg-[#00f99b]/10 transition-colors px-2 rounded-xl group">
+                    <div key={link.id || link._id} className="flex items-center gap-3.5 py-3 hover:bg-[#00f99b]/10 transition-colors px-2 rounded-xl group">
                       <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="sm" />
                       
                       <div className="flex-grow min-w-0">
@@ -199,7 +194,7 @@ export default function Dashboard() {
                           <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-secondary" />
                         </a>
                         <div className="flex gap-2 mt-1 items-center flex-wrap">
-                          <span className={`text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border inline-block ${catStyle.badge}`}>
+                          <span className={catStyle.flag}>
                             {link.category || catStyle.label}
                           </span>
                           <span className="text-[10px] font-medium text-primary/60 font-mono truncate max-w-[160px]">

@@ -37,7 +37,7 @@ export default function BookAgent() {
   const links = useAppStore(s => s.links);
   const [state, setState] = useState(S.IDLE);
   const [showGreet, setShowGreet] = useState(false);
-  const [greetText, setGreetText] = useState("👋 HI! I'M R-BOT!");
+  const [greetText, setGreetText] = useState("✨ Tap me for a daily spark or joke!");
   const [hovered, setHovered] = useState(false);
   
   const timer = useRef(null);
@@ -73,19 +73,30 @@ export default function BookAgent() {
     const total = links.length;
     const opId = user?.operatorId || 'OPERATOR';
     
-    const quotes = user ? [
-      "🤖 BEEP BOOP! R-BOT IS READY!",
-      `📚 I'M SAFEKEEPING ${total} LINKS IN YOUR VAULT!`,
-      `✨ OPERATOR ${opId}, YOU LOOK SHARP TODAY!`,
-      "⚡ READY TO ARCHIVE MORE GEMS!",
-      "🛡️ ALL LINKS PROTECTED & INDEXED."
-    ] : [
-      "👋 HELLO HUMAN! I'M R-BOT!",
-      "🔑 AUTHENTICATE TO UNLOCK YOUR VAULT.",
-      "🛡️ READY TO ARCHIVE YOUR FAVORITE WEB PAGES."
+    const quotes = [
+      // Motivational & Best Quotes
+      "🚀 'The secret of getting ahead is getting started.' — Mark Twain",
+      "🔥 'First, solve the problem. Then, write the code.' — John Johnson",
+      "⚡ 'Stay curious & keep building. Greatness is built one link at a time!'",
+      "💡 'Simplicity is prerequisite for reliability.' — Edsger Dijkstra",
+      "✨ 'Your mind is for having ideas, not holding them. RLinks has your back!'",
+      "🌟 'Every expert was once a beginner. Keep archiving gems!'",
+      "🏆 'Focus on progress, not perfection. You are doing amazing!'",
+      "🔮 'The best way to predict the future is to invent it.' — Alan Kay",
+      "🌱 'Small disciplines repeated with consistency lead to great achievements.'",
+      
+      // Coding Jokes & Tech Humor
+      "😂 Why do programmers prefer dark mode? Because light attracts bugs!",
+      "☕ A developer's mind: 90% coffee, 10% googling syntax errors!",
+      "🐛 It’s not a bug, it’s an undocumented feature in disguise!",
+      "🍕 Why did the JS developer wear glasses? Because they didn't C#!",
+      "🛸 There are 10 types of people: those who understand binary, and those who don't!",
+      "🤖 I asked my computer for a joke... it gave me Windows updates at 99%!",
+      "🌐 There's no place like 127.0.0.1 — home sweet localhost!",
+      "✨ 99 little bugs in the code, fix one down, 127 little bugs in the code!"
     ];
     
-    const idx = clickCount.current % quotes.length;
+    const idx = (clickCount.current + Math.floor(Math.random() * (quotes.length - 1) + 1)) % quotes.length;
     clickCount.current += 1;
     
     setGreetText(quotes[idx]);
@@ -95,8 +106,8 @@ export default function BookAgent() {
     timer.current = setTimeout(() => {
       setShowGreet(false);
       setTimeout(() => setState(S.IDLE), 300);
-    }, 3200);
-  }, [state, user, links]);
+    }, 4000);
+  }, [state]);
 
   const currentFace = FACES[state] || FACES[S.IDLE];
 
@@ -107,9 +118,9 @@ export default function BookAgent() {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={onTap}
-        className="fixed z-40 cursor-pointer select-none bottom-24 md:bottom-6 left-4 transition-transform duration-300"
+        className="fixed z-40 cursor-pointer select-none bottom-20 md:bottom-6 left-2 md:left-4 scale-[0.70] md:scale-100 origin-bottom-left transition-all duration-300"
         style={{
-          transform: hovered ? 'scale(1.08) translateY(-4px)' : 'scale(1)',
+          transform: hovered ? 'scale(1.08) translateY(-4px)' : undefined,
         }}
       >
         {/* Status Chip Above Bot */}
@@ -209,20 +220,20 @@ export default function BookAgent() {
 
         {/* Speech Bubble */}
         <div 
-          className="absolute bottom-[calc(100%+14px)] left-1/2 -translate-x-1/2 transition-all duration-300 pointer-events-none z-50 whitespace-nowrap"
+          className="absolute bottom-[calc(100%+14px)] left-0 sm:left-1/2 -translate-x-0 sm:-translate-x-1/2 transition-all duration-300 pointer-events-none z-50 min-w-[200px] max-w-[260px] sm:max-w-[340px]"
           style={{
             opacity: showGreet ? 1 : 0,
-            transform: showGreet ? 'translate(-50%, 0) scale(1)' : 'translate(-50%, 8px) scale(0.9)',
+            transform: showGreet ? 'translate(0, 0) scale(1)' : 'translate(0, 8px) scale(0.9)',
           }}
         >
           <div 
-            className="bg-[#121417] text-[#00f99b] border-2 border-[#00f99b] shadow-[3px_3px_0px_#006d41] px-3.5 py-2 rounded-xl font-mono text-[11px] font-bold tracking-wide flex items-center gap-2"
+            className="bg-[#121417] text-[#00f99b] border-2 border-[#00f99b] shadow-[3px_3px_0px_#006d41] px-3.5 py-2 rounded-xl font-mono text-[11px] font-bold tracking-wide flex flex-col gap-1 leading-snug whitespace-normal"
           >
             <span>{greetText}</span>
           </div>
           {/* Caret pointer */}
           <div 
-            className="w-0 h-0 border-x-4 border-x-transparent border-t-6 border-t-[#00f99b] mx-auto mt-[-1px]"
+            className="w-0 h-0 border-x-4 border-x-transparent border-t-6 border-t-[#00f99b] ml-6 sm:mx-auto mt-[-1px]"
           />
         </div>
       </aside>

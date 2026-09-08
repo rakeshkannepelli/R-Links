@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",
+    "ldrs": "^1.1.9",
     "lucide-react": "^0.344.0",
     "peerjs": "^1.5.5",
     "react": "^18.2.0",

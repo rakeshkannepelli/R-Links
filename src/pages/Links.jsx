@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import useAppStore from '../store';
 import Icon3D, { getCategoryTheme, getCategoryStyle } from '../components/Icon3D';
-import WebsiteIcon from '../components/WebsiteIcon';
+import WebsiteIcon, { extractDomain } from '../components/WebsiteIcon';
+import RudeStingraySwitch from '../components/RudeStingraySwitch';
 import toast from 'react-hot-toast';
 import { 
   Plus, 
@@ -16,20 +17,23 @@ import {
   FolderPlus,
   Globe,
   Clipboard,
-  X
+  X,
+  Sliders,
+  CheckCircle2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const UNIVERSAL_CATEGORIES = [
-  { id: 'AI TOOLS', label: 'AI Tools', icon: 'ai', theme: 'emerald' },
-  { id: 'WORK', label: 'Work', icon: 'work', theme: 'amber' },
+  { id: 'AI TOOLS', label: 'AI Tools', icon: 'ai', theme: 'purple' },
+  { id: 'WORK', label: 'Work', icon: 'work', theme: 'cyan' },
   { id: 'LEARNING', label: 'Learning', icon: 'learning', theme: 'indigo' },
-  { id: 'DESIGN', label: 'Design', icon: 'design', theme: 'purple' },
-  { id: 'DEV & TECH', label: 'Dev & Tech', icon: 'dev', theme: 'cyan' },
+  { id: 'DESIGN', label: 'Design', icon: 'design', theme: 'rose' },
+  { id: 'DEV & TECH', label: 'Dev & Tech', icon: 'dev', theme: 'emerald' },
+  { id: 'GAMING', label: 'Gaming', icon: 'gaming', theme: 'violet' },
   { id: 'MEDIA', label: 'Media', icon: 'media', theme: 'rose' },
   { id: 'SHOPPING', label: 'Shopping', icon: 'shopping', theme: 'amber' },
   { id: 'SOCIAL', label: 'Social', icon: 'social', theme: 'teal' },
-  { id: 'LIFESTYLE', label: 'Lifestyle', icon: 'lifestyle', theme: 'emerald' },
+  { id: 'LIFESTYLE', label: 'Lifestyle', icon: 'lifestyle', theme: 'cyan' },
   { id: 'PERSONAL', label: 'Personal', icon: 'personal', theme: 'slate' },
 ];
 
@@ -48,42 +52,69 @@ export default function Links() {
   // Universal Smart Auto-Categorizer
   const detectCategory = (urlStr) => {
     try {
-      const hostname = new URL(urlStr).hostname.toLowerCase();
+      const hostname = new URL(urlStr.startsWith('http') ? urlStr : `https://${urlStr}`).hostname.toLowerCase();
 
+      // Gaming & Esports
+      if (hostname.includes('steam') || hostname.includes('epicgames') || hostname.includes('twitch') || 
+          hostname.includes('roblox') || hostname.includes('riotgames') || hostname.includes('playstation') || 
+          hostname.includes('xbox') || hostname.includes('nintendo') || hostname.includes('ign.com') || 
+          hostname.includes('gamespot') || hostname.includes('chess.com') || hostname.includes('blizzard') || 
+          hostname.includes('ea.com') || hostname.includes('gog.com')) {
+        return 'GAMING';
+      }
       // AI & Tools
-      if (hostname.includes('openai') || hostname.includes('chatgpt') || hostname.includes('claude') || hostname.includes('anthropic') || hostname.includes('huggingface') || hostname.includes('midjourney') || hostname.includes('perplexity') || hostname.includes('gemini') || hostname.includes('copilot')) {
+      if (hostname.includes('openai') || hostname.includes('chatgpt') || hostname.includes('claude') || 
+          hostname.includes('anthropic') || hostname.includes('huggingface') || hostname.includes('midjourney') || 
+          hostname.includes('perplexity') || hostname.includes('gemini') || hostname.includes('copilot')) {
         return 'AI TOOLS';
       }
       // Dev & Tech
-      if (hostname.includes('github') || hostname.includes('gitlab') || hostname.includes('stackoverflow') || hostname.includes('npm') || hostname.includes('vercel') || hostname.includes('docker') || hostname.includes('developer') || hostname.includes('w3schools')) {
+      if (hostname.includes('github') || hostname.includes('gitlab') || hostname.includes('stackoverflow') || 
+          hostname.includes('npm') || hostname.includes('vercel') || hostname.includes('docker') || 
+          hostname.includes('developer') || hostname.includes('w3schools') || hostname.includes('hashnode')) {
         return 'DEV & TECH';
       }
       // Work & Productivity
-      if (hostname.includes('notion') || hostname.includes('slack') || hostname.includes('trello') || hostname.includes('asana') || hostname.includes('jira') || hostname.includes('linear') || hostname.includes('docs.google') || hostname.includes('figma') || hostname.includes('miro') || hostname.includes('linkedin')) {
+      if (hostname.includes('notion') || hostname.includes('slack') || hostname.includes('trello') || 
+          hostname.includes('asana') || hostname.includes('jira') || hostname.includes('linear') || 
+          hostname.includes('docs.google') || hostname.includes('figma') || hostname.includes('miro') || 
+          hostname.includes('linkedin')) {
         return 'WORK';
       }
       // Learning & Study
-      if (hostname.includes('coursera') || hostname.includes('udemy') || hostname.includes('edx') || hostname.includes('wikipedia') || hostname.includes('medium') || hostname.includes('substack') || hostname.includes('khanacademy') || hostname.includes('mit.edu') || hostname.includes('arxiv')) {
+      if (hostname.includes('coursera') || hostname.includes('udemy') || hostname.includes('edx') || 
+          hostname.includes('wikipedia') || hostname.includes('medium') || hostname.includes('substack') || 
+          hostname.includes('khanacademy') || hostname.includes('mit.edu') || hostname.includes('arxiv')) {
         return 'LEARNING';
       }
       // Design & Art
-      if (hostname.includes('dribbble') || hostname.includes('behance') || hostname.includes('pinterest') || hostname.includes('canva') || hostname.includes('artstation') || hostname.includes('unsplash') || hostname.includes('coolors')) {
+      if (hostname.includes('dribbble') || hostname.includes('behance') || hostname.includes('pinterest') || 
+          hostname.includes('canva') || hostname.includes('artstation') || hostname.includes('unsplash') || 
+          hostname.includes('coolors')) {
         return 'DESIGN';
       }
       // Media & Entertainment
-      if (hostname.includes('youtube') || hostname.includes('spotify') || hostname.includes('netflix') || hostname.includes('twitch') || hostname.includes('vimeo') || hostname.includes('soundcloud') || hostname.includes('disney') || hostname.includes('music')) {
+      if (hostname.includes('youtube') || hostname.includes('spotify') || hostname.includes('netflix') || 
+          hostname.includes('vimeo') || hostname.includes('soundcloud') || hostname.includes('disney') || 
+          hostname.includes('music')) {
         return 'MEDIA';
       }
       // Shopping & Wishlist
-      if (hostname.includes('amazon') || hostname.includes('ebay') || hostname.includes('etsy') || hostname.includes('walmart') || hostname.includes('target') || hostname.includes('aliexpress') || hostname.includes('shop')) {
+      if (hostname.includes('amazon') || hostname.includes('ebay') || hostname.includes('etsy') || 
+          hostname.includes('walmart') || hostname.includes('target') || hostname.includes('aliexpress') || 
+          hostname.includes('shop')) {
         return 'SHOPPING';
       }
       // Social & Community
-      if (hostname.includes('reddit') || hostname.includes('twitter') || hostname.includes('x.com') || hostname.includes('instagram') || hostname.includes('facebook') || hostname.includes('threads') || hostname.includes('discord') || hostname.includes('tiktok')) {
+      if (hostname.includes('reddit') || hostname.includes('twitter') || hostname.includes('x.com') || 
+          hostname.includes('instagram') || hostname.includes('facebook') || hostname.includes('threads') || 
+          hostname.includes('discord') || hostname.includes('tiktok')) {
         return 'SOCIAL';
       }
       // Lifestyle & Travel
-      if (hostname.includes('booking') || hostname.includes('airbnb') || hostname.includes('tripadvisor') || hostname.includes('allrecipes') || hostname.includes('maps.google') || hostname.includes('uber') || hostname.includes('health')) {
+      if (hostname.includes('booking') || hostname.includes('airbnb') || hostname.includes('tripadvisor') || 
+          hostname.includes('allrecipes') || hostname.includes('maps.google') || hostname.includes('uber') || 
+          hostname.includes('health')) {
         return 'LIFESTYLE';
       }
 
@@ -105,7 +136,8 @@ export default function Links() {
     setUrl(val);
     if (!title) {
       try {
-        const u = new URL(val);
+        const clean = val.startsWith('http') ? val : `https://${val}`;
+        const u = new URL(clean);
         const host = u.hostname.replace('www.', '');
         const path = u.pathname.split('/').filter(Boolean)[0] || '';
         const derived = host + (path ? ` / ${path}` : '');
@@ -153,14 +185,8 @@ export default function Links() {
         }
       }
 
-      let detectedDomain = '';
-      try {
-        detectedDomain = new URL(cleanedUrl).hostname.replace('www.', '');
-      } catch {
-        detectedDomain = '';
-      }
-
-      const iconToSave = detectedDomain ? `https://www.google.com/s2/favicons?domain=${detectedDomain}&sz=128` : '';
+      const domain = extractDomain(cleanedUrl);
+      const iconToSave = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : '';
 
       await addLink({
         url: cleanedUrl,
@@ -189,6 +215,8 @@ export default function Links() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const detectedDomain = extractDomain(url);
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 page-enter pb-16">
       {/* Header */}
@@ -198,45 +226,42 @@ export default function Links() {
             INGESTION TERMINAL
           </span>
           <span className="text-[10px] font-mono text-primary/50 uppercase">
-            ANY LINK // ONE-CLICK ORGANIZED
+            ANY LINK // INSTANT AUTHENTIC PREVIEW
           </span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-black uppercase text-primary tracking-tight leading-none mb-3">
           Add Resource Link
         </h1>
         <p className="text-xs sm:text-sm text-primary/70 font-medium max-w-xl leading-relaxed">
-          Store any link in seconds. Select a category or let smart detection classify it automatically into your personal 3D vault.
+          Store any web resource in seconds. Smart AI detection automatically classifies and fetches verified authentic icons directly into your vault.
         </p>
       </header>
 
-      {/* 3D Modern Input Deck */}
-      <section className="card-3d p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-[#fbf9f0]">
-        <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#5f5e5e]/20">
+      {/* 3D Tactile Input Deck */}
+      <section className="card-3d p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-[#fbf9f0] border-2 border-[#5f5e5e]/30 shadow-[6px_6px_0px_#1b1c17]">
+        {/* Header bar with Modern Physical Switch Button */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-[#5f5e5e]/20">
           <div className="flex items-center gap-2 text-secondary font-mono text-xs font-black uppercase tracking-wider">
             <FolderPlus size={16} />
             <span>LINK SPECIFICATIONS</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono font-bold uppercase text-primary/60">
+          {/* Authentic Rude Stingray Uiverse Switch */}
+          <div className="flex items-center gap-2.5 bg-[#f0eee5] border-2 border-[#5f5e5e]/30 px-3 py-1.5 rounded-2xl shadow-inner select-none">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-primary/70">
               SMART DETECT:
             </span>
-            <button
-              type="button"
-              onClick={() => setAutoDetect(!autoDetect)}
-              className={`px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase transition-all ${
-                autoDetect
-                  ? 'bg-secondary text-white shadow-sm'
-                  : 'bg-[#f0eee5] text-primary/60 hover:text-primary'
-              }`}
-            >
-              {autoDetect ? 'ACTIVE' : 'MANUAL'}
-            </button>
+            <RudeStingraySwitch
+              checked={autoDetect}
+              onChange={setAutoDetect}
+              labelLeft="MANUAL"
+              labelRight="AUTO"
+            />
           </div>
         </div>
 
         <form onSubmit={handleAdd} className="space-y-6">
-          {/* URL Input with Live Website Icon Detection & Quick Paste */}
+          {/* Website URL Input with Live Authentic Favicon Detection & Quick Paste */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label htmlFor="url-input" className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
@@ -244,16 +269,18 @@ export default function Links() {
                 <span>Website URL</span>
                 <span className="text-red-500">*</span>
               </label>
-              {url.trim() ? (
-                <span className="text-[10px] font-mono font-bold text-secondary flex items-center gap-1.5 bg-secondary/10 px-2 py-0.5 rounded-full border border-secondary/20">
-                  <span>LIVE ICON ACTIVE</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping" />
-                </span>
+              {detectedDomain ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold text-secondary flex items-center gap-1.5 bg-[#00f99b]/15 px-2.5 py-0.5 rounded-full border border-[#00f99b]/40">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
+                    <span>AUTHENTIC ICON ACTIVE</span>
+                  </span>
+                </div>
               ) : (
                 <button
                   type="button"
                   onClick={handlePaste}
-                  className="text-[10px] font-mono font-bold text-primary/70 hover:text-secondary flex items-center gap-1 cursor-pointer transition-colors"
+                  className="text-[10px] font-mono font-bold text-primary/70 hover:text-secondary flex items-center gap-1 cursor-pointer transition-colors bg-[#f0eee5] hover:bg-[#e4e3da] px-2.5 py-1 rounded-lg border border-[#5f5e5e]/20"
                 >
                   <Clipboard size={12} />
                   <span>PASTE CLIPBOARD</span>
@@ -261,13 +288,13 @@ export default function Links() {
               )}
             </div>
 
-            <div className="flex items-center bg-white border-2 border-[#5f5e5e]/30 rounded-2xl px-4 py-3 focus-within:border-secondary focus-within:shadow-[0_0_0_4px_rgba(0,249,155,0.15)] transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center bg-white border-2 border-[#5f5e5e]/30 rounded-2xl px-4 py-3 focus-within:border-secondary focus-within:shadow-[0_0_0_4px_rgba(0,249,155,0.18)] transition-all duration-200 shadow-[3px_3px_0px_rgba(0,0,0,0.06)]">
               {url.trim() ? (
                 <div className="mr-3 shrink-0">
                   <WebsiteIcon url={url} category={selectedCategory} size="sm" />
                 </div>
               ) : (
-                <div className="w-8 h-8 rounded-xl bg-[#f0eee5] flex items-center justify-center mr-3 shrink-0 text-primary/50">
+                <div className="w-8 h-8 rounded-xl bg-[#f0eee5] flex items-center justify-center mr-3 shrink-0 text-primary/50 border border-[#5f5e5e]/20">
                   <Globe size={18} />
                 </div>
               )}
@@ -277,17 +304,17 @@ export default function Links() {
                 type="text"
                 value={url}
                 onChange={e => handleUrlChange(e.target.value)}
-                placeholder="https://example.com/article, github repo, or tool..."
+                placeholder="https://example.com/article, github repo, steam game, or tool..."
                 className="w-full bg-transparent outline-none font-bold text-sm sm:text-base text-primary placeholder:text-primary/30"
               />
               {url.trim() && (
                 <button
                   type="button"
                   onClick={() => { setUrl(''); setTitle(''); }}
-                  className="p-1.5 text-primary/40 hover:text-primary hover:bg-[#f0eee5] rounded-lg transition-colors ml-2 shrink-0"
+                  className="p-1.5 text-primary/40 hover:text-primary hover:bg-[#f0eee5] rounded-lg transition-colors ml-2 shrink-0 cursor-pointer"
                   title="Clear input"
                 >
-                  <X size={15} />
+                  <X size={16} />
                 </button>
               )}
             </div>
@@ -303,8 +330,8 @@ export default function Links() {
               <span className="text-[10px] font-mono text-primary/50">AUTO-DERIVED IF BLANK</span>
             </div>
 
-            <div className="flex items-center bg-white border-2 border-[#5f5e5e]/30 rounded-2xl px-4 py-3 focus-within:border-secondary focus-within:shadow-[0_0_0_4px_rgba(0,249,155,0.15)] transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.04)]">
-              <div className="w-8 h-8 rounded-xl bg-[#f0eee5] flex items-center justify-center mr-3 shrink-0 text-primary/50">
+            <div className="flex items-center bg-white border-2 border-[#5f5e5e]/30 rounded-2xl px-4 py-3 focus-within:border-secondary focus-within:shadow-[0_0_0_4px_rgba(0,249,155,0.18)] transition-all duration-200 shadow-[3px_3px_0px_rgba(0,0,0,0.06)]">
+              <div className="w-8 h-8 rounded-xl bg-[#f0eee5] flex items-center justify-center mr-3 shrink-0 text-primary/50 border border-[#5f5e5e]/20">
                 <Type size={16} />
               </div>
               <input
@@ -312,37 +339,38 @@ export default function Links() {
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="e.g. My Favorite Design Tool (or auto-use site name)"
+                placeholder="e.g. Steam Community Hub, Notion Workspace, or Claude AI..."
                 className="w-full bg-transparent outline-none font-bold text-sm text-primary placeholder:text-primary/30"
               />
               {title.trim() && (
                 <button
                   type="button"
                   onClick={() => setTitle('')}
-                  className="p-1.5 text-primary/40 hover:text-primary hover:bg-[#f0eee5] rounded-lg transition-colors ml-2 shrink-0"
+                  className="p-1.5 text-primary/40 hover:text-primary hover:bg-[#f0eee5] rounded-lg transition-colors ml-2 shrink-0 cursor-pointer"
                   title="Clear title"
                 >
-                  <X size={15} />
+                  <X size={16} />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Clean 3D Category Selector Chips with Individual Category Colors */}
+          {/* Clean 3D Category Selector Chips with Distinct Theme Styling */}
           <div className="space-y-3 pt-2">
             <div className="flex justify-between items-center">
               <label className="flex items-center gap-2 text-xs font-mono font-bold text-primary uppercase tracking-wide">
                 <Tag size={14} className="text-secondary" />
-                <span>Select Category Color</span>
+                <span>Select Category</span>
               </label>
               {autoDetect && (
-                <span className="text-[10px] font-mono font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">
-                  AUTO SELECTED: {selectedCategory}
+                <span className="text-[10px] font-mono font-bold text-secondary bg-secondary/10 px-2.5 py-0.5 rounded-full border border-secondary/20 flex items-center gap-1.5">
+                  <Sparkles size={11} />
+                  <span>SMART CLASSIFIED: {selectedCategory}</span>
                 </span>
               )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 pt-1">
               {UNIVERSAL_CATEGORIES.map(cat => {
                 const isSelected = selectedCategory === cat.id;
                 const catStyle = getCategoryStyle(cat.id);
@@ -354,7 +382,7 @@ export default function Links() {
                       setAutoDetect(false);
                       setSelectedCategory(cat.id);
                     }}
-                    className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition-all text-left font-mono text-[11px] font-bold uppercase truncate ${
+                    className={`p-2.5 rounded-xl border-2 flex items-center gap-2 transition-all duration-150 text-left font-mono text-[11px] font-bold uppercase truncate cursor-pointer ${
                       isSelected
                         ? `${catStyle.activeTab} -translate-y-0.5`
                         : `bg-[#f0eee5] border-[#5f5e5e]/20 text-primary/80 hover:bg-[#e4e3da] hover:border-[#5f5e5e]/40`
@@ -368,7 +396,7 @@ export default function Links() {
             </div>
           </div>
 
-          {/* Submit Action — High-Contrast Dark Tactile Button */}
+          {/* Submit Action — Tactile High-Contrast Button */}
           <div className="pt-4 flex justify-end">
             <button
               disabled={adding}
@@ -391,7 +419,7 @@ export default function Links() {
         </form>
       </section>
 
-      {/* Recently Archived Resources Preview with Vibrant Category Badges */}
+      {/* Recently Archived Resources Preview with Authentic Favicons */}
       <section className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-base font-black uppercase tracking-tight text-primary flex items-center gap-2">
@@ -407,23 +435,17 @@ export default function Links() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {recentLinks.map((link) => {
             const catStyle = getCategoryStyle(link.category);
-            let domain = '';
-            try {
-              domain = new URL(link.url).hostname.replace('www.', '');
-            } catch {
-              domain = link.url;
-            }
-
+            const domain = extractDomain(link.url);
             const isCopied = copiedId === (link.id || link._id);
 
             return (
-              <div key={link.id || link._id} className="card-3d p-4 rounded-2xl flex flex-col justify-between group bg-[#fbf9f0]">
+              <div key={link.id || link._id} className="card-3d p-4 rounded-2xl flex flex-col justify-between group bg-[#fbf9f0] border-2 border-[#5f5e5e]/25">
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2.5">
                       <WebsiteIcon url={link.url} icon={link.icon} category={link.category} size="sm" />
                       <div>
-                        <span className={`text-[9px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded border inline-block ${catStyle.badge}`}>
+                        <span className={catStyle.flag}>
                           {link.category || catStyle.label}
                         </span>
                         <p className="text-[10px] font-mono text-primary/50 mt-0.5">{domain}</p>
@@ -432,7 +454,7 @@ export default function Links() {
 
                     <button
                       onClick={() => handleCopy(link.id || link._id, link.url)}
-                      className="p-1.5 hover:bg-[#5f5e5e]/10 text-primary/60 hover:text-primary rounded-lg"
+                      className="p-1.5 hover:bg-[#5f5e5e]/10 text-primary/60 hover:text-primary rounded-lg transition-colors cursor-pointer"
                       title="Copy URL"
                     >
                       {isCopied ? <Check size={14} className="text-secondary font-bold" /> : <Copy size={14} />}

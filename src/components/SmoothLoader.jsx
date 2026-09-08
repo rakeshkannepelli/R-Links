@@ -1,30 +1,37 @@
 import React from 'react';
+import { grid } from 'ldrs';
 
-export default function SmoothLoader({ message = 'INITIALIZING SYSTEM NODE...', subtext = 'Validating neural credentials' }) {
+// Register UI Ball grid web component once
+if (typeof window !== 'undefined') {
+  grid.register();
+}
+
+export default function SmoothLoader({ 
+  message = 'INITIALIZING SYSTEM NODE...', 
+  subtext = 'Validating neural credentials and link vault index' 
+}) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d0f11]/90 backdrop-blur-md text-[#fbf9f0] select-none">
-      {/* 3D Core Loader */}
-      <div className="relative w-28 h-28 flex items-center justify-center mb-8">
-        {/* Outer pulsating orbit */}
-        <div className="absolute inset-0 rounded-full border-2 border-dashed border-[#00f99b]/30 animate-[spin_8s_linear_infinite]" />
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0d0f11]/90 backdrop-blur-xl text-[#fbf9f0] select-none page-enter transition-opacity duration-300">
+      {/* 3D Core Loader Container */}
+      <div className="relative flex flex-col items-center justify-center mb-8">
+        {/* Ambient Glow behind Grid */}
+        <div className="absolute -inset-6 bg-[#00f99b]/15 rounded-full blur-2xl pointer-events-none animate-pulse" />
         
-        {/* Counter-rotating glowing ring */}
-        <div className="absolute inset-2 rounded-full border-2 border-t-[#00f99b] border-r-transparent border-b-[#006d41] border-l-transparent animate-[spin_2s_linear_infinite]" />
-        
-        {/* 3D Isometric Diamond Core */}
-        <div className="relative w-12 h-12 bg-gradient-to-br from-[#00f99b] to-[#006d41] shadow-[0_0_25px_rgba(0,249,155,0.6)] rotate-45 flex items-center justify-center animate-pulse border border-[#ffffff]/40">
-          <div className="w-5 h-5 bg-[#0d0f11] rotate-45 shadow-inner" />
+        {/* UI Ball LDRS Grid Web Component */}
+        <div className="relative z-10 flex items-center justify-center p-4 rounded-2xl bg-[#141820]/80 border border-[#00f99b]/30 shadow-[0_0_30px_rgba(0,249,155,0.2)]">
+          <l-grid
+            size="64"
+            speed="1.4"
+            color="#00f99b"
+          ></l-grid>
         </div>
-
-        {/* Ambient Glow */}
-        <div className="absolute -inset-4 bg-[#00f99b]/10 rounded-full blur-xl pointer-events-none" />
       </div>
 
       {/* Cyber Telemetry Status */}
-      <div className="flex flex-col items-center text-center space-y-2 px-4 max-w-sm">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center text-center space-y-2.5 px-4 max-w-sm relative z-10">
+        <div className="flex items-center gap-2 bg-[#00f99b]/10 border border-[#00f99b]/30 px-3 py-1 rounded-full">
           <span className="w-2 h-2 rounded-full bg-[#00f99b] animate-ping" />
-          <span className="font-['Space_Grotesk'] text-sm tracking-[0.25em] font-black uppercase text-[#00f99b]">
+          <span className="font-['Space_Grotesk'] text-xs tracking-[0.2em] font-black uppercase text-[#00f99b]">
             {message}
           </span>
         </div>

@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Icon3D, { getCategoryTheme, getCategoryStyle } from './Icon3D';
 
-// Clean domain extractor
-function extractDomain(rawUrl) {
-  if (!rawUrl) return '';
+// Clean and reliable FQDN domain extractor
+export function extractDomain(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return '';
   let clean = rawUrl.trim().toLowerCase();
   if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
     clean = 'https://' + clean;
@@ -13,14 +13,14 @@ function extractDomain(rawUrl) {
     return parsed.hostname.replace(/^www\./, '');
   } catch {
     const match = clean.match(/https?:\/\/(?:www\.)?([^\/\s:]+)/i);
-    return match ? match[1] : '';
+    return match ? match[1].toLowerCase() : '';
   }
 }
 
-// Guaranteed instant SVG brand logos for major websites if favicons fail or take time
-const BRAND_LOGOS = {
+// Strict Brand Logos: ONLY matched when domain is strictly identical or a direct subdomain
+const STRICT_BRAND_LOGOS = {
   'github.com': (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-[#1b1c17] dark:text-white">
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-[#1b1c17]">
       <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
     </svg>
   ),
@@ -38,7 +38,7 @@ const BRAND_LOGOS = {
     </svg>
   ),
   'x.com': (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-[#1b1c17] dark:text-white">
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-[#1b1c17]">
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
     </svg>
   ),
@@ -67,15 +67,13 @@ const BRAND_LOGOS = {
     </svg>
   ),
   'notion.so': (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-[#1b1c17] dark:text-white">
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-[#1b1c17]">
       <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.64c-.466-.373-.793-.42-1.68-.373L3.106 2.387c-.326.046-.28.28-.14.42zm.84 3.732v12.783c0 .886.42 1.166 1.4 1.073l13.822-.84c.98-.046 1.166-.606 1.166-1.306V6.96c0-.653-.28-.98-1.026-.933l-14.335.84c-.746.047-1.026.373-1.026 1.073zm13.402.793c.093.42 0 .84-.42.886l-.7.14v9.61c-1.026.56-1.96.84-2.8.84-1.26 0-1.633-.42-2.566-1.633l-4.153-6.44v6.58l1.353.28s0 .84-1.12.84l-3.36-.046c-.093-.373.187-.746.56-.84l.84-.186V9.293l-1.166-.093c-.093-.42 0-.84.42-.887l3.64-.233 4.526 6.953v-6.02l-1.166-.14c-.093-.42.093-.84.42-.886z"/>
     </svg>
   )
 };
 
 export default function WebsiteIcon({ url = '', icon = '', category = 'WORK', size = 'md', className = '' }) {
-  const [imgError, setImgError] = useState(false);
-
   const domain = useMemo(() => extractDomain(url), [url]);
   const categoryTheme = useMemo(() => getCategoryTheme(category), [category]);
   const categoryStyle = useMemo(() => getCategoryStyle(category), [category]);
@@ -83,34 +81,70 @@ export default function WebsiteIcon({ url = '', icon = '', category = 'WORK', si
   // Size configurations
   const sizeMap = {
     xs: { box: 'w-6 h-6 rounded-lg p-1 text-[10px]', img: 'w-4 h-4', icon3d: 'xs' },
-    sm: { box: 'w-8 h-8 rounded-xl p-1.5 text-xs', img: 'w-5 h-5', icon3d: 'sm' },
-    md: { box: 'w-10 h-10 rounded-2xl p-2 text-sm', img: 'w-6 h-6', icon3d: 'md' },
-    lg: { box: 'w-12 h-12 rounded-2xl p-2.5 text-base', img: 'w-8 h-8', icon3d: 'lg' },
+    sm: { box: 'w-8 h-8 rounded-xl p-1 text-xs', img: 'w-5 h-5', icon3d: 'sm' },
+    md: { box: 'w-10 h-10 rounded-2xl p-1.5 text-sm', img: 'w-6 h-6', icon3d: 'md' },
+    lg: { box: 'w-12 h-12 rounded-2xl p-2 text-base', img: 'w-8 h-8', icon3d: 'lg' },
   };
   const currentSize = sizeMap[size] || sizeMap.md;
 
-  // 1. Check direct Brand Logo SVG
-  const matchingBrandKey = Object.keys(BRAND_LOGOS).find(k => domain.includes(k) || k.includes(domain));
-  if (matchingBrandKey) {
+  // STRICT brand logo check - ONLY if domain matches exactly or is subdomain
+  // e.g. "github.com" or "gist.github.com", NEVER substrings or empty domains
+  const strictBrandSvg = useMemo(() => {
+    if (!domain) return null;
+    const matchKey = Object.keys(STRICT_BRAND_LOGOS).find(k => domain === k || domain.endsWith('.' + k));
+    return matchKey ? STRICT_BRAND_LOGOS[matchKey] : null;
+  }, [domain]);
+
+  // Multi-tier authentic favicon source list:
+  // 1. Explicit user/saved icon (if present)
+  // 2. Google High-Res 128px Favicon service (most reliable worldwide CDN)
+  // 3. DuckDuckGo Icon service
+  const candidateSources = useMemo(() => {
+    if (!domain) return [];
+    const list = [];
+    if (icon && typeof icon === 'string' && icon.startsWith('http')) {
+      list.push(icon);
+    }
+    list.push(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`);
+    list.push(`https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`);
+    return list;
+  }, [domain, icon]);
+
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const [allFailed, setAllFailed] = useState(false);
+
+  // Reset state when url or icon changes
+  useEffect(() => {
+    setSourceIndex(0);
+    setAllFailed(false);
+  }, [url, icon]);
+
+  const handleImgError = () => {
+    if (sourceIndex + 1 < candidateSources.length) {
+      setSourceIndex(prev => prev + 1);
+    } else {
+      setAllFailed(true);
+    }
+  };
+
+  // Case 1: Strict Brand Vector SVG
+  if (strictBrandSvg) {
     return (
       <div 
-        className={`relative inline-flex items-center justify-center bg-white border border-[#5f5e5e]/20 shadow-[2px_2px_0px_rgba(0,0,0,0.06)] shrink-0 overflow-hidden ${currentSize.box} ${className}`}
+        className={`relative inline-flex items-center justify-center bg-white border border-[#5f5e5e]/25 shadow-[2px_2px_0px_rgba(0,0,0,0.06)] shrink-0 overflow-hidden ${currentSize.box} ${className}`}
         title={domain || category}
       >
         <div className={`flex items-center justify-center ${currentSize.img}`}>
-          {BRAND_LOGOS[matchingBrandKey]}
+          {strictBrandSvg}
         </div>
       </div>
     );
   }
 
-  // 2. High-res Favicon URLs
-  const primarySrc = icon || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : '');
-
-  // 3. If image failed or no domain, render Monogram or 3D Category Icon
-  if (imgError || !primarySrc) {
+  // Case 2: If no domain or all authentic favicon sources failed, show authentic Domain Monogram Badge
+  // NEVER show another company's icon!
+  if (allFailed || !domain || candidateSources.length === 0) {
     if (domain) {
-      // Clean, professional single-letter monogram badge
       const letter = domain.charAt(0).toUpperCase();
       return (
         <div 
@@ -121,8 +155,12 @@ export default function WebsiteIcon({ url = '', icon = '', category = 'WORK', si
         </div>
       );
     }
+    // Only if URL is totally empty, display category 3D icon
     return <Icon3D name={categoryTheme.name} theme={categoryTheme.theme} size={currentSize.icon3d} className={className} />;
   }
+
+  // Case 3: Authentic live high-res Favicon from cascade
+  const currentSrc = candidateSources[sourceIndex];
 
   return (
     <div 
@@ -130,14 +168,15 @@ export default function WebsiteIcon({ url = '', icon = '', category = 'WORK', si
       title={domain || category}
     >
       <img
-        src={primarySrc}
-        alt={domain ? `${domain} icon` : `${category} icon`}
+        key={currentSrc}
+        src={currentSrc}
+        alt={`${domain} icon`}
         loading="lazy"
         className={`object-contain select-none transition-transform group-hover:scale-110 ${currentSize.img}`}
         style={{
           imageRendering: '-webkit-optimize-contrast',
         }}
-        onError={() => setImgError(true)}
+        onError={handleImgError}
       />
     </div>
   );
