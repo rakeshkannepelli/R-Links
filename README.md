@@ -20,3 +20,6 @@ in future i shall add very important features
   <br>
 
   -- for now this application is only in free tier so after soon few update may be changes could happen.
+
+
+## in future making this more better and ui also feel futuristic for users 
