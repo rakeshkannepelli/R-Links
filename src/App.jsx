@@ -108,6 +108,7 @@ function App() {
             <Route path="share" element={<Share />} />
             <Route path="profile" element={<Profile />} />
           </Route>
+          <Route path="/loader-preview" element={<SmoothLoader />} />
           {/* Catch-all route to prevent 404 dead-ends */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
