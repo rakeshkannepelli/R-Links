@@ -14,4 +14,5 @@ export const API_URL = (() => {
   return 'https://r-links.onrender.com';
 })();
 
-export const GITHUB_CLIENT_ID = 'Ov23licc8CPvx9v9fWN9';
+export const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23licc8CPvx9v9fWN9';
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '865692260796-7mhoi18o9tivclje90gq3748778suoru.apps.googleusercontent.com';

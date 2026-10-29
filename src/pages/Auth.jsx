@@ -66,10 +66,21 @@ export default function Auth() {
         const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, frontendUrl: window.location.origin })
+          body: JSON.stringify({ email: email.trim(), operatorId: email.trim(), frontendUrl: window.location.origin })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Failed to send reset link.');
+        
+        // If email failed to deliver or in local mode, fallback straight to reset page
+        if (data.resetLink) {
+          toast.success('Recovery link ready! Opening reset form...');
+          const tokenPart = data.resetLink.split('/reset-password/')[1];
+          if (tokenPart) {
+            navigate(`/reset-password/${tokenPart}`);
+            return;
+          }
+        }
+
         toast.success(data.message);
         setIsForgot(false);
         setIsLoading(false);
