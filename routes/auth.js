@@ -12,10 +12,22 @@ const router = new express.Router();
 // Register a new user
 router.post('/register', async (req, res) => {
   try {
-    const { operatorId, email, password } = req.body;
+    const operatorId = (req.body.operatorId || '').trim();
+    const email = (req.body.email || '').trim().toLowerCase();
+    const password = req.body.password;
+
+    if (!operatorId || !email || !password) {
+      return res.status(400).send({ error: 'Operator ID, Email, and Password are all required.' });
+    }
     
-    // Check if operator ID or email already exists
-    const existingUser = await User.findOne({ $or: [{ operatorId }, { email }] });
+    // Check if operator ID or email already exists (case-insensitive for both)
+    const escapedOperatorId = operatorId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const existingUser = await User.findOne({
+      $or: [
+        { operatorId: new RegExp(`^${escapedOperatorId}$`, 'i') },
+        { email }
+      ]
+    });
     if (existingUser) {
       return res.status(400).send({ error: 'Operator ID or Email already taken.' });
     }
@@ -105,7 +117,7 @@ router.post('/google', async (req, res) => {
     }
     
     // Generate our own JWT token for them!
-    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     const userResponse = user.toObject();
     delete userResponse.password;
@@ -187,7 +199,7 @@ router.post('/github', async (req, res) => {
     }
     
     // 5. Generate our own JWT token!
-    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     const userDoc = user.toObject();
     delete userDoc.password;
@@ -202,20 +214,28 @@ router.post('/github', async (req, res) => {
 // Forgot Password
 router.post('/forgot-password', async (req, res) => {
   try {
-    const rawEmail = (req.body.email || '').trim().toLowerCase();
-    if (!rawEmail) {
-      return res.status(400).send({ error: 'Please provide a valid email address.' });
+    const identifier = (req.body.email || req.body.operatorId || '').trim();
+    if (!identifier) {
+      return res.status(400).send({ error: 'Please provide a valid email address or operator ID.' });
     }
 
-    const user = await User.findOne({ email: rawEmail });
+    const escapedIdentifier = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { operatorId: new RegExp(`^${escapedIdentifier}$`, 'i') }
+      ]
+    });
+
     if (!user) {
       // Don't leak whether user exists for security reasons
-      return res.send({ message: 'If that email is in our database, we will send a password reset link.' });
+      return res.send({ message: 'If that account is in our database, we will send a password reset link.' });
     }
 
-    // Generate token
+    // Generate cryptographically secure token and store SHA-256 hash in DB
     const resetToken = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = resetToken;
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
@@ -232,7 +252,10 @@ router.post('/forgot-password', async (req, res) => {
           auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
-          }
+          },
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 10000
         });
 
         await transporter.sendMail({
@@ -287,8 +310,10 @@ router.post('/forgot-password', async (req, res) => {
     console.log('======================================================\n');
 
     res.send({ 
-      message: 'Password reset link sent! Check your inbox.',
-      resetLink: process.env.NODE_ENV !== 'production' ? resetURL : undefined
+      message: emailDelivered
+        ? 'Password reset link sent! Check your inbox (and spam folder).'
+        : 'Password reset link generated. (Fallback recovery link available)',
+      resetLink: !emailDelivered || process.env.NODE_ENV !== 'production' ? resetURL : undefined
     });
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -304,8 +329,12 @@ router.post('/reset-password/:token', async (req, res) => {
       return res.status(400).send({ error: 'Password must be at least 4 characters.' });
     }
 
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
     const user = await User.findOne({ 
-      resetPasswordToken: req.params.token, 
+      $or: [
+        { resetPasswordToken: hashedToken },
+        { resetPasswordToken: req.params.token }
+      ],
       resetPasswordExpires: { $gt: Date.now() } 
     });
 

@@ -6,8 +6,8 @@ const router = new express.Router();
 // GET all links for the logged-in user
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    // Sort links by date descending
-    const links = req.user.links.sort((a, b) => b.date - a.date);
+    // Sort links by date descending safely
+    const links = req.user.links.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
     res.send(links);
   } catch (error) {
     res.status(500).send({ error: 'Failed to fetch links' });
