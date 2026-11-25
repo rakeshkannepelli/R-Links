@@ -312,8 +312,8 @@ router.post('/forgot-password', async (req, res) => {
     res.send({ 
       message: emailDelivered
         ? 'Password reset link sent! Check your inbox (and spam folder).'
-        : 'Password reset link generated. (Fallback recovery link available)',
-      resetLink: !emailDelivered || process.env.NODE_ENV !== 'production' ? resetURL : undefined
+        : 'If that account is in our database, we will send a password reset link.',
+      resetLink: process.env.NODE_ENV !== 'production' ? resetURL : undefined
     });
   } catch (error) {
     console.error('Forgot password error:', error);

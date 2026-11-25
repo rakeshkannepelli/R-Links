@@ -1,5 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
+const { isValidHttpUrl, sanitizeLinkInput } = require('../utils/validation');
 
 const router = new express.Router();
 
@@ -17,7 +18,10 @@ router.get('/', authMiddleware, async (req, res) => {
 // POST a new link
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const linkData = { ...req.body };
+    const linkData = sanitizeLinkInput(req.body);
+    if (!isValidHttpUrl(linkData.url)) {
+      return res.status(400).send({ error: 'Invalid URL. Only http:// and https:// URLs are allowed.' });
+    }
     if (!linkData.icon && linkData.url) {
       try {
         const domain = new URL(linkData.url).hostname.replace('www.', '');
@@ -45,6 +49,10 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 
   if (!isValidOperation) {
     return res.status(400).send({ error: 'Invalid updates!' });
+  }
+
+  if (req.body.url !== undefined && !isValidHttpUrl(req.body.url)) {
+    return res.status(400).send({ error: 'Invalid URL. Only http:// and https:// URLs are allowed.' });
   }
 
   try {

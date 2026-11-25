@@ -96,4 +96,36 @@ describe('RLINKS Backend Security & Logic Test Suite', () => {
     const isWrongMatch = await bcrypt.compare('WrongPassword', hash);
     assert.strictEqual(isWrongMatch, false);
   });
+
+  it('rejects unsafe URL schemes (javascript:, data:) and accepts http/https', () => {
+    const { isValidHttpUrl } = require('../utils/validation');
+
+    assert.strictEqual(isValidHttpUrl('https://github.com/heygen-com/hyperframes'), true);
+    assert.strictEqual(isValidHttpUrl('http://localhost:5173'), true);
+    assert.strictEqual(isValidHttpUrl('javascript:alert(1)'), false);
+    assert.strictEqual(isValidHttpUrl('data:text/html,<script>alert(1)</script>'), false);
+    assert.strictEqual(isValidHttpUrl('not a url'), false);
+    assert.strictEqual(isValidHttpUrl(''), false);
+  });
+
+  it('whitelists only allowed link fields and strips unexpected properties', () => {
+    const { sanitizeLinkInput } = require('../utils/validation');
+
+    const cleaned = sanitizeLinkInput({
+      title: 'Linear',
+      url: 'https://linear.app',
+      category: 'WORK',
+      _id: 'injected-id',
+      __proto__: {},
+      isAdmin: true,
+      tags: ['productivity']
+    });
+
+    assert.strictEqual(cleaned.title, 'Linear');
+    assert.strictEqual(cleaned.url, 'https://linear.app');
+    assert.strictEqual(cleaned.category, 'WORK');
+    assert.deepStrictEqual(cleaned.tags, ['productivity']);
+    assert.strictEqual(Object.prototype.hasOwnProperty.call(cleaned, '_id'), false);
+    assert.strictEqual(Object.prototype.hasOwnProperty.call(cleaned, 'isAdmin'), false);
+  });
 });
