@@ -13,6 +13,7 @@ export default function Layout() {
   const location = useLocation();
   const logout = useAppStore(state => state.logout);
   const user = useAppStore(state => state.user);
+  const isBackendOnline = useAppStore(state => state.isBackendOnline);
 
   // Instant Route Transition Lag-Masking Progress Bar
   const [navigating, setNavigating] = useState(false);
@@ -167,9 +168,9 @@ export default function Layout() {
               <span className="text-[11px] font-mono font-black uppercase text-primary tracking-wide leading-none truncate max-w-[110px]">
                 {displayName}
               </span>
-              <span className="text-[9px] font-mono text-secondary uppercase font-bold flex items-center gap-1 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-                <span>ONLINE</span>
+              <span className={`text-[9px] font-mono uppercase font-bold flex items-center gap-1 mt-0.5 ${isBackendOnline ? 'text-secondary' : 'text-amber-600'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isBackendOnline ? 'bg-secondary' : 'bg-amber-500'}`} />
+                <span>{isBackendOnline ? 'ONLINE' : 'SYNCING'}</span>
               </span>
             </div>
           </NavLink>

@@ -168,7 +168,11 @@ export default function Links() {
     }
 
     try {
-      new URL(cleanedUrl);
+      const parsed = new URL(cleanedUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        toast.error('Only http:// and https:// URLs are allowed');
+        return;
+      }
     } catch {
       toast.error('Please enter a valid website URL');
       return;
@@ -202,7 +206,7 @@ export default function Links() {
       setTitle('');
       toast.success('Link successfully archived in Vault');
     } catch (err) {
-      toast.error('Failed to save link');
+      toast.error(err.message || 'Failed to save link');
     } finally {
       setAdding(false);
     }

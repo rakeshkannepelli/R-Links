@@ -153,14 +153,18 @@ export default function Profile() {
     setIsEditingDetails(true);
   };
 
-  const handleSaveDetails = (e) => {
+  const handleSaveDetails = async (e) => {
     e.preventDefault();
     const username = e.target.username.value.trim();
     const role = e.target.role.value.trim();
-    updateUser({ username, role });
-    dispatchBotEvent('PROFILE_UPDATE');
-    setIsEditingDetails(false);
-    toast.success('Operator profile updated');
+    try {
+      await updateUser({ username, role });
+      dispatchBotEvent('PROFILE_UPDATE');
+      setIsEditingDetails(false);
+      toast.success('Operator profile updated');
+    } catch (err) {
+      toast.error(err.message || 'Failed to update profile');
+    }
   };
 
   const handleEditPhoto = () => {
@@ -173,10 +177,14 @@ export default function Profile() {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        updateUser({ photoUrl: reader.result });
-        dispatchBotEvent('PROFILE_UPDATE');
-        toast.success('Avatar updated');
+      reader.onloadend = async () => {
+        try {
+          await updateUser({ photoUrl: reader.result });
+          dispatchBotEvent('PROFILE_UPDATE');
+          toast.success('Avatar updated');
+        } catch (err) {
+          toast.error(err.message || 'Failed to update avatar');
+        }
       };
       reader.readAsDataURL(file);
     }

@@ -200,11 +200,11 @@ export default function Auth() {
 
             <div className="relative group">
               <label htmlFor="email-input" className="block font-label text-[11px] font-bold text-primary mb-2 uppercase tracking-widest">
-                {isLogin && !isForgot ? '[01] EMAIL OR OPERATOR_ID' : '[01] EMAIL_ADDRESS'}
+                {isLogin || isForgot ? '[01] EMAIL OR OPERATOR_ID' : '[01] EMAIL_ADDRESS'}
               </label>
               <div className="flex items-center border-b-2 border-[#5f5e5e]/40 group-focus-within:border-secondary transition-all pb-1">
                 <span className="text-secondary font-bold mr-2 text-xl tracking-tighter">&gt;</span>
-                <input id="email-input" required disabled={isLoading} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/40 placeholder:font-normal uppercase py-1 disabled:opacity-50" placeholder={isLogin && !isForgot ? "OPERATOR OR EMAIL@NETWORK.COM" : "OPERATOR@NETWORK.COM"} type={isLogin && !isForgot ? "text" : "email"} />
+                <input id="email-input" required disabled={isLoading} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent border-none focus:ring-0 outline-none text-primary font-bold placeholder:text-primary/40 placeholder:font-normal uppercase py-1 disabled:opacity-50" placeholder={isLogin || isForgot ? "OPERATOR OR EMAIL@NETWORK.COM" : "OPERATOR@NETWORK.COM"} type={isLogin || isForgot ? "text" : "email"} />
                 <span className="w-2.5 h-5 bg-secondary/40 hidden group-focus-within:block blink"></span>
               </div>
             </div>

@@ -65,21 +65,19 @@ const useAppStore = create(
       },
 
       updateUser: async (updates) => {
-        try {
-          const token = localStorage.getItem('token');
-          if (!token) return;
-          const res = await fetch(`${API_URL}/api/auth/me`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(updates)
-          });
-          const data = await res.json();
-          if (res.ok) {
-            set({ user: data.user });
-          }
-        } catch (err) {
-          console.error('Failed to update user profile', err);
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Not authenticated');
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(updates)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to update user profile');
         }
+        set({ user: data.user, isBackendOnline: true });
+        return data.user;
       },
 
       dispatchBotEvent: (type) => set({ lastAction: { type, timestamp: Date.now() } }),
@@ -108,25 +106,24 @@ const useAppStore = create(
       },
 
       addLink: async (link) => {
-        try {
-          const token = localStorage.getItem('token');
-          if (!token) return;
-          const res = await fetch(`${API_URL}/api/links`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(link)
-          });
-          if (res.ok) {
-            const newLink = await res.json();
-            newLink.id = newLink._id || newLink.id; // Map MongoDB _id
-            set((state) => ({ 
-              links: [newLink, ...state.links],
-              lastAction: { type: 'ADD', timestamp: Date.now() }
-            }));
-          }
-        } catch (err) {
-          console.error('Failed to add link', err);
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Not authenticated');
+        const res = await fetch(`${API_URL}/api/links`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(link)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to add link');
         }
+        data.id = data._id || data.id; // Map MongoDB _id
+        set((state) => ({ 
+          links: [data, ...state.links],
+          lastAction: { type: 'ADD', timestamp: Date.now() },
+          isBackendOnline: true
+        }));
+        return data;
       },
       
       deleteLink: async (id) => {
@@ -139,18 +136,21 @@ const useAppStore = create(
 
         try {
           const token = localStorage.getItem('token');
-          if (!token) return;
+          if (!token) return false;
           const res = await fetch(`${API_URL}/api/links/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (!res.ok) {
-            // Revert if server rejected
             set({ links: previousLinks });
+            return false;
           }
+          set({ isBackendOnline: true });
+          return true;
         } catch (err) {
           console.error('Failed to delete link on server', err);
-          set({ links: previousLinks });
+          set({ links: previousLinks, isBackendOnline: false });
+          return false;
         }
       },
 
@@ -164,19 +164,22 @@ const useAppStore = create(
 
         try {
           const token = localStorage.getItem('token');
-          if (!token) return;
+          if (!token) return false;
           const res = await fetch(`${API_URL}/api/links/${id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(updatedData)
           });
           if (!res.ok) {
-            // Revert on server rejection
             set({ links: previousLinks });
+            return false;
           }
+          set({ isBackendOnline: true });
+          return true;
         } catch (err) {
           console.error('Failed to update link on server', err);
-          set({ links: previousLinks });
+          set({ links: previousLinks, isBackendOnline: false });
+          return false;
         }
       },
 

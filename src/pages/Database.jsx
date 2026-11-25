@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import useAppStore from '../store';
 import Icon3D, { getCategoryTheme, getCategoryStyle } from '../components/Icon3D';
 import WebsiteIcon, { extractDomain } from '../components/WebsiteIcon';
@@ -121,8 +121,25 @@ export default function Database() {
   }, [links, search, filterCategory, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLinks.length / itemsPerPage));
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  const safePage = Math.min(currentPage, totalPages);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const startIndex = (safePage - 1) * itemsPerPage;
   const paginatedLinks = filteredLinks.slice(startIndex, startIndex + itemsPerPage);
+
+  const getSafeHref = (rawUrl) => {
+    try {
+      const parsed = new URL(rawUrl);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? rawUrl : '#';
+    } catch {
+      return '#';
+    }
+  };
 
   const handleCopy = (id, url) => {
     navigator.clipboard.writeText(url);
@@ -140,15 +157,27 @@ export default function Database() {
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
-    await updateLink(editingId, { title: editTitle, url: editUrl, category: editCategory });
-    setEditingId(null);
-    toast.success('Resource updated');
+    if (getSafeHref(editUrl) === '#') {
+      toast.error('Only http:// and https:// URLs are allowed');
+      return;
+    }
+    const ok = await updateLink(editingId, { title: editTitle, url: editUrl, category: editCategory });
+    if (ok) {
+      setEditingId(null);
+      toast.success('Resource updated');
+    } else {
+      toast.error('Failed to update resource');
+    }
   };
 
-  const handleDelete = (id, title) => {
+  const handleDelete = async (id, title) => {
     if (window.confirm(`Delete entry "${title || 'this link'}"?`)) {
-      deleteLink(id);
-      toast.success('Resource deleted from vault');
+      const ok = await deleteLink(id);
+      if (ok) {
+        toast.success('Resource deleted from vault');
+      } else {
+        toast.error('Failed to delete resource');
+      }
     }
   };
 
@@ -403,7 +432,7 @@ export default function Database() {
                 {/* Resource Title & Monospace Link Preview */}
                 <div className="my-2 space-y-1.5 flex-grow">
                   <h3 className="font-black text-base text-primary leading-snug line-clamp-2 group-hover:text-secondary transition-colors">
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    <a href={getSafeHref(link.url)} target="_blank" rel="noopener noreferrer">
                       {link.title || link.url}
                     </a>
                   </h3>
@@ -417,7 +446,7 @@ export default function Database() {
                   <div className="flex items-center gap-1.5">
                     {/* Direct Launch Button */}
                     <a
-                      href={link.url}
+                      href={getSafeHref(link.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-3d bg-[#00f99b] text-[#006d41] font-black px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 hover:brightness-105 uppercase tracking-wider"
